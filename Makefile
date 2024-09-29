@@ -16,7 +16,7 @@ SRC = $(wildcard $(SRCDIR)/*.cpp)
 OBJ = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
 
 # Target to compile the executable
-$(TARGET): $(OBJ)
+$(BUILDDIR)/$(TARGET): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Rule to compile .cpp files into .o object files
@@ -30,5 +30,5 @@ $(OBJDIR):
 # Clean up the build
 .PHONY: clean
 clean:
-	rm -rf $(BUILDDIR) $(TARGET)
+	rm -rf $(BUILDDIR)/$(TARGET) $(OBJDIR)
 
