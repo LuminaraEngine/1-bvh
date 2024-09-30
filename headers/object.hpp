@@ -2,6 +2,7 @@
 
 #include <float3.hpp>
 #include <triangle.hpp>
+#include <bvh_node.hpp>
 
 namespace bvh {
 
@@ -11,20 +12,19 @@ namespace bvh {
     float3 rotation;
     float3 scale;
 
-    int num_triangles;
     Triangle* triangles;
+    int num_triangles;
 
-    Object(float3 position, float3 rotation, float3 scale, int num_triangles, Triangle* triangles) {
-      this->position = position;
-      this->rotation = rotation;
-      this->scale = scale;
-      this->num_triangles = num_triangles;
-      this->triangles = triangles;
-    }
+    BvhNode *bvh;
 
-    ~Object() {
-      delete[] triangles;
-    }
+    static Object* build(char* obj_filename);
+
+    static Object* build(char* obj_filename, char* bvh_filename);
+
+    ~Object();
+
+  private:
+    Object(float3 position, float3 rotation, float3 scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
   };
 
 }
