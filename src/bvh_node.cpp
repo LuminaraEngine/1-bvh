@@ -19,4 +19,6 @@ BvhLeaf::BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indic
   }
 }
 
-BvhLeaf::~BvhLeaf() {}
+BvhLeaf::~BvhLeaf() {
+  delete[] this->indices;
+}
