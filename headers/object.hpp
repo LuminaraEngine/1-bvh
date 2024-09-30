@@ -1,6 +1,6 @@
 #pragma once
 
-#include <float3.hpp>
+#include <vec3.hpp>
 #include <triangle.hpp>
 #include <bvh_node.hpp>
 
@@ -8,9 +8,9 @@ namespace bvh {
 
   class Object {
   public:
-    float3 position;
-    float3 rotation;
-    float3 scale;
+    vec3<float> position;
+    vec3<float> rotation;
+    vec3<float> scale;
 
     Triangle* triangles;
     int num_triangles;
@@ -24,7 +24,7 @@ namespace bvh {
     ~Object();
 
   private:
-    Object(float3 position, float3 rotation, float3 scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
+    Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
   };
 
 }

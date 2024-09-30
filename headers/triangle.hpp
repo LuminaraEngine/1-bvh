@@ -1,12 +1,12 @@
 #pragma once
 
-#include <float3.hpp>
+#include <vec3.hpp>
 
 namespace bvh {
 
   typedef struct {
-    float3 a, b, c;   // Vertices
-    float3 normal;    // Normal vector
+    vec3<float> a, b, c;   // Vertices
+    vec3<float> normal;    // Normal vector
   } Triangle;
 
 }

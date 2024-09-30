@@ -2,7 +2,4 @@
 
 using namespace bvh;
 
-BoundingBox::BoundingBox(float3 min, float3 max) {
-  this->min = min;
-  this->max = max;
-}
+BoundingBox::BoundingBox(vec3<float> min, vec3<float> max) : min(min), max(max) {}

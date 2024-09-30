@@ -2,14 +2,8 @@
 
 using namespace bvh;
 
-Object::Object(float3 position, float3 rotation, float3 scale, Triangle *triangles, int num_triangles, BvhNode* bvh) {
-  this->position = position;
-  this->rotation = rotation;
-  this->scale = scale;
-  this->triangles = triangles;
-  this->num_triangles = num_triangles;
-  this->bvh = bvh;
-}
+Object::Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode* bvh)
+  : position(position), rotation(rotation), scale(scale), triangles(triangles), num_triangles(num_triangles), bvh(bvh) {}
 
 Object::~Object() {
   delete[] triangles;
@@ -18,8 +12,12 @@ Object::~Object() {
 
 Object* Object::build(char* obj_filename) {
   // TODO: Testing team
+
+  return nullptr;
 }
 
 Object* Object::build(char* obj_filename, char* bvh_filename) {
   // TODO: Testing team
+
+  return nullptr;
 }

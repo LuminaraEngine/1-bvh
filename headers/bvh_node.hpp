@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vec3.hpp>
 #include <triangle.hpp>
 #include <bounding_box.hpp>
 
@@ -12,7 +13,7 @@ namespace bvh {
       BvhNode *left, *right;
       BoundingBox bounding_box;
 
-      BvhNode(BvhNode* left, BvhNode* right);
+      BvhNode(vec3<float> min, vec3<float> max);
       ~BvhNode();
   };
 
@@ -21,7 +22,7 @@ namespace bvh {
       int num_triangles;
       int indices[BVH_LEAF_SIZE];
 
-      BvhLeaf(int num_triangles, int* indices);
+      BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices);
 
       ~BvhLeaf();
   };

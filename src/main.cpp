@@ -1,23 +1,26 @@
-#include <float3.hpp>
+#include <vec3.hpp>
 #include <triangle.hpp>
-#include <object.hpp>
+#include <bvh_node.hpp>
 
 #include <iostream>
 
 int main() {
-  bvh::float3 position = {0.0f, 0.0f, 0.0f};
-  bvh::float3 rotation = {0.0f, 0.0f, 0.0f};
-  bvh::float3 scale = {1.0f, 1.0f, 1.0f};
+  bvh::vec3<float> a;
+
+  bvh::vec3<float> position(0.0f, 0.0f, 0.0f);
+  bvh::vec3<float> rotation(0.0f, 0.0f, 0.0f);
+  bvh::vec3<float> scale(1.0f, 1.0f, 1.0f);
 
   bvh::Triangle triangle = {
-    {0.0f, 0.0f, 0.0f},
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f}
+    bvh::vec3<float>(0.0f, 0.0f, 0.0f),
+    bvh::vec3<float>(1.0f, 0.0f, 0.0f),
+    bvh::vec3<float>(0.0f, 1.0f, 0.0f),
+    bvh::vec3<float>(0.0f, 0.0f, 1.0f)
   };
 
-  bvh::Object object(position, rotation, scale, 1, &triangle);
-
-  std::cout << "Object position: (" << object.position.x << ", " << object.position.y << ", " << object.position.z << ")" << std::endl;
+  bvh::BvhNode bvh_root = bvh::BvhNode({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
+  bvh_root.left = new bvh::BvhLeaf({-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 0.0f}, 1, new int[1]{0});
+  bvh_root.right = new bvh::BvhLeaf({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, 1, new int[1]{1});
 
   return 0;
 }
