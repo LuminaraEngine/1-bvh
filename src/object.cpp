@@ -1,5 +1,7 @@
 #include <vec2.hpp>
 #include <object.hpp>
+#include <bvh_node.hpp>
+#include <bvh.hpp>
 
 #include <cstdio>
 #include <iostream>
@@ -102,7 +104,6 @@ Object::~Object() {
 }
 
 void Object::build_bvh(char* obj_filename, char* bvh_filename) {
-  // TODO: Testing team
 
   // Parse the obj file
   Triangle* triangles;
@@ -113,10 +114,17 @@ void Object::build_bvh(char* obj_filename, char* bvh_filename) {
   }
 
   // Build the BVH
+  BvhNode* bvh = precompute_bvh(triangles, num_triangles);
 
   // Save the BVH to a file
+  // TODO:
+  // 1- design .bvh file format
+  // 2- write function to save the BVH to a file
+  // 3- write function to load the BVH from a file
+
 
   return;
+
 }
 
 Object* Object::load(char* obj_filename, char* bvh_filename) {
