@@ -6,25 +6,29 @@
 
 #define BVH_LEAF_SIZE 8
 
-namespace bvh {
+namespace bvh
+{
 
-  class BvhNode {
-    public:
-      BvhNode *left, *right;
-      BoundingBox bounding_box;
+  class BvhNode
+  {
+  public:
+    BvhNode *left, *right;
+    BoundingBox bounding_box;
 
-      BvhNode(vec3<float> min, vec3<float> max);
-      ~BvhNode();
+    BvhNode(vec3<float> min, vec3<float> max);
+    virtual ~BvhNode(); // Virtual to enable polymorphism
+                        // With virtual, the destructor of BvhLeaf is called first, followed by the BvhNode destructor
   };
 
-  class BvhLeaf : public BvhNode {
-    public:
-      int num_triangles;
-      int indices[BVH_LEAF_SIZE];
+  class BvhLeaf : public BvhNode // BvhLeaf inherits from BvhNode (special type of BvhNode)
+  {
+  public:
+    int num_triangles;
+    int indices[BVH_LEAF_SIZE];
 
-      BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices);
+    BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int *indices);
 
-      ~BvhLeaf();
+    ~BvhLeaf();
   };
 
 }

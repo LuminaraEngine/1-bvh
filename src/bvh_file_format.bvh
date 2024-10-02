@@ -1,0 +1,19 @@
+# BVH File Format
+
+# Defines an internal node
+n <min.x> <min.y> <min.z> <max.x> <max.y> <max.z>
+    # min.x, min.y, min.z: Minimum coordinates of the bounding box
+    # max.x, max.y, max.z: Maximum coordinates of the bounding box
+
+# Defines a leaf node containing triangles
+l <min.x> <min.y> <min.z> <max.x> <max.y> <max.z> <triangle_1> [<triangle_2> <triangle_3> ...]
+    # min.x, min.y, min.z: Minimum coordinates of the bounding box for the leaf
+    # max.x, max.y, max.z: Maximum coordinates of the bounding box for the leaf
+    # triangle_1: The index of the first triangle in this leaf
+    # [triangle_2 ...]: Optional additional triangle indices contained in this leaf
+
+# Defines the tree
+t <node> <left_child> <right_child>
+    # node: Line number (within the file) of this node in the tree
+    # left_child: Line number (within the file) of the left child node
+    # right_child: Line number (within the file) of the right child node
