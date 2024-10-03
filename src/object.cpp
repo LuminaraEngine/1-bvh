@@ -114,7 +114,7 @@ void Object::build_bvh(char* obj_filename, char* bvh_filename) {
   }
 
   // Build the BVH
-  BvhNode* bvh = precompute_bvh(triangles, num_triangles);
+  // BvhNode* bvh = precompute_bvh(triangles, num_triangles);
 
   // Save the BVH to a file
   // TODO:
