@@ -17,9 +17,9 @@ namespace bvh {
 
     BvhNode *bvh;
 
-    static Object* build(char* obj_filename);
+    static void build_bvh(char* obj_filename, char* bvh_filename);
 
-    static Object* build(char* obj_filename, char* bvh_filename);
+    static Object* load(char* obj_filename, char* bvh_filename);
 
     ~Object();
 
