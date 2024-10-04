@@ -14,7 +14,7 @@ namespace bvh {
       BoundingBox bounding_box;
 
       BvhNode(vec3<float> min, vec3<float> max);
-      ~BvhNode();
+      virtual ~BvhNode();
   };
 
   class BvhLeaf : public BvhNode {

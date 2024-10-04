@@ -99,8 +99,11 @@ Object::Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Tr
   : position(position), rotation(rotation), scale(scale), triangles(triangles), num_triangles(num_triangles), bvh(bvh) {}
 
 Object::~Object() {
-  delete[] triangles;
-  delete bvh;
+    std::cout << "Deleting Object at " << this << " with " << num_triangles << " triangles." << std::endl;
+    delete[] triangles; // Delete the triangles
+    triangles = nullptr; // Set to nullptr to avoid double delete
+    delete bvh;
+    bvh = nullptr;
 }
 
 void Object::build_bvh(char* obj_filename, char* bvh_filename) {

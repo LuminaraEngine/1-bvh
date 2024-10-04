@@ -17,6 +17,10 @@ namespace bvh {
 
     BvhNode *bvh;
 
+    // Default constructor
+    Object() : triangles(nullptr), num_triangles(0) {}
+
+
     static void build_bvh(char* obj_filename, char* bvh_filename);
 
     static Object* load(char* obj_filename, char* bvh_filename);
