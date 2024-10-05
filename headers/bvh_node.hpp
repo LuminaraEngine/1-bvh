@@ -13,8 +13,10 @@ namespace bvh {
       BvhNode *left, *right;
       BoundingBox bounding_box;
 
+      BvhNode();
       BvhNode(vec3<float> min, vec3<float> max);
       ~BvhNode();
+      virtual void print();
   };
 
   class BvhLeaf : public BvhNode {
@@ -22,9 +24,10 @@ namespace bvh {
       int num_triangles;
       int indices[BVH_LEAF_SIZE];
 
+      BvhLeaf();
       BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices);
-
       ~BvhLeaf();
+      void print() override;
   };
 
 }
