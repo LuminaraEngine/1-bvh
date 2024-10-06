@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <string>
 #include <unordered_map>
+#include <iostream>
+#include <stdlib.h>
 
 using namespace bvh;
 
@@ -23,6 +25,12 @@ void run_all_tests() {
       result = test.second();
     }
     catch(const std::exception& e) {
+      printf("Test %s crashed\n", test.first.c_str());
+      printf("Exception: %s\n", e.what());
+      result = false;
+      crashed = true;
+    }
+    catch(...) {
       result = false;
       crashed = true;
     }
@@ -30,15 +38,11 @@ void run_all_tests() {
     if (result) {
       printf("Test %s passed\n", test.first.c_str());
       num_passed++;
-    } else {
-      if (crashed) {
-        printf("Test %s crashed\n", test.first.c_str());
-      } else {
-        printf("Test %s failed\n", test.first.c_str());
-      }
+    } else if (!crashed) {
+      printf("Test %s failed\n", test.first.c_str());
     }
   }
-  
+
   printf("%d/%d tests passed\n", num_passed, num_tests);
 }
 
@@ -72,6 +76,12 @@ int main(int argc, char** argv) {
       result = tests[test_name]();
     }
     catch(const std::exception& e) {
+        printf("Test %s crashed\n", test_name.c_str());
+      printf("Exception: %s\n", e.what());
+      result = false;
+      crashed = true;
+    }
+    catch(...) {
       result = false;
       crashed = true;
     }
@@ -79,12 +89,8 @@ int main(int argc, char** argv) {
     if (result) {
       printf("Test %s passed\n", test_name.c_str());
       num_passed++;
-    } else {
-      if (crashed) {
-        printf("Test %s crashed\n", test_name.c_str());
-      } else {
-        printf("Test %s failed\n", test_name.c_str());
-      }
+    } else if (!crashed) {
+      printf("Test %s failed\n", test_name.c_str());
     }
   }
 
