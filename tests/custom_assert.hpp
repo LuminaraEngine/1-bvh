@@ -1,10 +1,15 @@
 #pragma once
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
-void custom_assert(bool condition, const std::string& message) {
-  if (!condition) {
-    throw std::runtime_error(message);
+class AssertionFailedException : public std::runtime_error {
+public:
+  AssertionFailedException(const std::string& message)
+    : std::runtime_error(message) {}
+};
+
+#define assert(condition, message) \
+  if (!(condition)) { \
+    throw AssertionFailedException(message); \
   }
-}

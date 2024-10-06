@@ -1,7 +1,7 @@
 #pragma once
 
-namespace bvh {
+namespace bvh::tests {
 
-  bool test_load_bvh();
+  bool load_bvh();
 
 }
