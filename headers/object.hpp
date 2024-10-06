@@ -27,7 +27,7 @@ namespace bvh
 
     ~Object();
 
-  private:
+  public:
     Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode *bvh);
   };
 

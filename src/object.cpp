@@ -5,7 +5,7 @@
 
 #include <cstdio>
 #include <iostream>
-#include <stack>
+#include <queue>
 
 using namespace bvh;
 
@@ -136,20 +136,22 @@ void Object::build_bvh(char *obj_filename, char *bvh_filename)
   }
 
   // Build the BVH
-  BvhNode *bvh = precompute_bvh(triangles, num_triangles);
+  // BvhNode *bvh = precompute_bvh(triangles, num_triangles);
 
   // Save the BVH to a file
-  save_bvh(bvh_filename, bvh);
+  // save_bvh(bvh_filename, bvh);
 
   return;
 }
 
-// TODO:
-// 1- design .bvh file format
-// 2- write function to save the BVH to a file
-// 3- write function to load the BVH from a file
+// TODO: write function to load the BVH from a file
 
-// Function to save the BVH structure to a file
+/**
+ * @brief Function to save the BVH structure to a file
+ *
+ * @param bvh_filename The name of the file to save the BVH structure to
+ * @param bvh The root node of the BVH structure
+ */
 void Object::save_bvh(char *bvh_filename, BvhNode *bvh)
 {
   // Open the BVH file for writing
@@ -160,23 +162,23 @@ void Object::save_bvh(char *bvh_filename, BvhNode *bvh)
     return;
   }
 
-  int num_nodes = 1; // Count the number of nodes that were stored in the BVH file
-
-  // Depth-first traversal to save BVH structure
-  std::vector<BvhNode *> node_tree_stack; // Stack to hold nodes for depth-first traversal
-  node_tree_stack.push_back(bvh);         // Store the root node
-  while (!node_tree_stack.empty())
+  // Breadth-first traversal to save BVH structure
+  std::queue<BvhNode *> node_tree_queue;
+  node_tree_queue.push(bvh); // Store the root node
+  // std::cout << "Processing root node " << bvh << " with children " << bvh->left << " and " << bvh->right << std::endl;
+  while (!node_tree_queue.empty())
   {
-    BvhNode *current_node = node_tree_stack.back(); // Get the current node
-    node_tree_stack.pop_back();                     // Remove the current node from the stack
+    BvhNode *current_node = node_tree_queue.front(); // Get the current node
+    node_tree_queue.pop();                           // Remove the current node from the queue
 
     // Put leaf information inside the BVH file
     if (dynamic_cast<BvhLeaf *>(current_node)) // Check if the current node is a leaf
     {
       BvhLeaf *current_leaf = dynamic_cast<BvhLeaf *>(current_node); // Get the node as a leaf
+      // std::cout << "Processing leaf node " << current_leaf << " with " << current_leaf->num_triangles << " triangles." << std::endl;
 
       // Format in BVH file: l <min.x> <min.y> <min.z> <max.x> <max.y> <max.z> <triangle_1> [<triangle_2> <triangle_3> ...]
-      fprintf(file, "l %f %f %f %f %f %f %d [",
+      fprintf(file, "l %f %f %f %f %f %f %d ",
               current_leaf->bounding_box.min.x, current_leaf->bounding_box.min.y, current_leaf->bounding_box.min.z,
               current_leaf->bounding_box.max.x, current_leaf->bounding_box.max.y, current_leaf->bounding_box.max.z,
               current_leaf->indices[0]);
@@ -188,15 +190,15 @@ void Object::save_bvh(char *bvh_filename, BvhNode *bvh)
         }
         else if (i == current_leaf->num_triangles - 1)
         {
-          fprintf(file, "%d]\n", current_leaf->indices[i]);
+          fprintf(file, "%d\n", current_leaf->indices[i]);
         }
       }
-      num_nodes++;
     }
 
     // Put node information inside the BVH file
     else // It's an internal node
     {
+      // std::cout << "Processing internal node " << current_node << " with children " << current_node->left << " and " << current_node->right << std::endl;
       // Format in BVH file: n <min.x> <min.y> <min.z> <max.x> <max.y> <max.z>
       fprintf(file, "n %f %f %f %f %f %f\n",
               current_node->bounding_box.min.x, current_node->bounding_box.min.y, current_node->bounding_box.min.z,
@@ -205,39 +207,15 @@ void Object::save_bvh(char *bvh_filename, BvhNode *bvh)
       // Save the node's children
       if (current_node->left)
       {
-        node_tree_stack.push_back(current_node->left); // Push left child onto stack
+        node_tree_queue.push(current_node->left);
       }
       if (current_node->right)
       {
-        node_tree_stack.push_back(current_node->right); // Push right child onto stack
+        node_tree_queue.push(current_node->right);
       }
-      num_nodes++;
-    }
-  }
-
-  // Put tree information inside the BVH file
-  for (int line_num = 1; line_num <= num_nodes; ++line_num)
-  {
-    int left_child_index = (2 * line_num);
-    int right_child_index = (2 * line_num) + 1;
-
-    // If the node has two children
-    if (left_child_index < line_num) // Make sure the child indices do not exceed the total number of nodes
-    {
-      fprintf(file, "t %d %d %d\n", line_num, left_child_index, right_child_index);
     }
 
-    // If the node only has a left child
-    else if (right_child_index == line_num)
-    {
-      fprintf(file, "t %d %d -1\n", line_num, left_child_index);
-    }
-
-    // If the node is a leaf
-    else
-    {
-      fprintf(file, "t %d -1 -1\n", line_num);
-    }
+    // std::cout << "Stack size: " << node_tree_queue.size() << std::endl;
   }
 
   fclose(file);
