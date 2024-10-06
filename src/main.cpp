@@ -3,8 +3,6 @@
 #include <cstdio>
 #include <string>
 #include <unordered_map>
-#include <iostream>
-#include <stdlib.h>
 
 using namespace bvh;
 
