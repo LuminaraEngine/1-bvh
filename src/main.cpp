@@ -10,30 +10,24 @@
 
 
 // Add new tests here
-std::unordered_map<std::string, bool (*)()> tests = {
+std::unordered_map<std::string, void (*)()> tests = {
   {"load_bvh", bvh::tests::load_bvh}
 };
 
 
-bool run_one_test(std::string test_name, bool (*test_funct)()) {
+bool run_one_test(std::string test_name, void (*test_funct)()) {
 
   try {
     // Run the test
     auto start = std::chrono::high_resolution_clock::now();
-    bool result = test_funct();
+    test_funct();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
 
-    // Print the result
-    if (result) {
-      std::cout << BG_GREEN << "TEST" << RESET_BG << GREEN << ' ' << test_name << RESET_COLOR << std::endl;
-      std::cout << "PASSED after " << duration.count() << " ms" << std::endl << std::endl;
-      return true;
-    } else {
-      std::cout << BG_RED << "TEST" << RESET_BG << RED << ' ' << test_name << RESET_COLOR << std::endl;
-      std::cout << "FAILED after " << duration.count() << " ms" << std::endl << std::endl;
-      return false;
-    }
+    // Success
+    std::cout << BG_GREEN << "TEST" << RESET_BG << GREEN << ' ' << test_name << RESET_COLOR << std::endl;
+    std::cout << "PASSED after " << duration.count() << " ms" << std::endl << std::endl;
+    return true;
   }
   // Catch exceptions
   catch(const AssertionFailedException& e) {
@@ -57,6 +51,12 @@ bool run_one_test(std::string test_name, bool (*test_funct)()) {
 }
 
 
+void print_summary(int num_passed, int num_tests) {
+  std::cout << BG_CYAN << "SUMMARY" << RESET_BG << std::endl;
+  printf("%d/%d tests passed\n", num_passed, num_tests);
+}
+
+
 void run_all_tests() {
   int num_tests = tests.size();
   int num_passed = 0;
@@ -67,7 +67,7 @@ void run_all_tests() {
     }
   }
 
-  printf("%d/%d tests passed\n", num_passed, num_tests);
+  print_summary(num_passed, num_tests);
 }
 
 
@@ -111,8 +111,7 @@ int main(int argc, char** argv) {
     }    
   }
 
-  std::cout << BG_CYAN << "SUMMARY" << RESET_BG << std::endl;
-  printf("%d/%d tests passed\n", num_passed, num_tests);
+  print_summary(num_passed, num_tests);
 
   return 0;
 

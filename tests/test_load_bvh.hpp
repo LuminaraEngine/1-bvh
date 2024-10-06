@@ -2,6 +2,6 @@
 
 namespace bvh::tests {
 
-  bool load_bvh();
+  void load_bvh();
 
 }
