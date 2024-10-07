@@ -6,7 +6,7 @@
 
 namespace bvh {
 
-  BvhNode *precompute_bvh(Triangle *tris, int num_tris);
+  BvhNode *precompute_bvh(Triangle *tris, int num_tris, int startIndex);
   BvhNode *build_bvh(Object *objs, int num_objs);
 
 }

@@ -77,33 +77,17 @@ void create_objects(bvh::Object* objs, int num_objs) {
 // Main function
 int main() {
     // Create an array of objects
-    int num_objs = 3;
+    int num_objs = 1;
     bvh::Object* objs = new bvh::Object[num_objs];
 
     // Create objects and initialize triangles
     create_objects(objs, num_objs);
 
-    // Print the triangle vertices for each object
-    for (int i = 0; i < num_objs; ++i) {
-        std::cout << "Object " << i << " contains the following triangles:\n";
-        for (int j = 0; j < objs[i].num_triangles; ++j) {
-            std::cout << "Triangle " << j << ": "
-                      << "V0: (" << objs[i].triangles[j].vertices[0].x << ", "
-                      << objs[i].triangles[j].vertices[0].y << ", "
-                      << objs[i].triangles[j].vertices[0].z << "), "
-                      << "V1: (" << objs[i].triangles[j].vertices[1].x << ", "
-                      << objs[i].triangles[j].vertices[1].y << ", "
-                      << objs[i].triangles[j].vertices[1].z << "), "
-                      << "V2: (" << objs[i].triangles[j].vertices[2].x << ", "
-                      << objs[i].triangles[j].vertices[2].y << ", "
-                      << objs[i].triangles[j].vertices[2].z << ")\n";
-        }
-    }
-
     // Build BVH for each object
     for (int i = 0; i < num_objs; ++i) {
         objs[i].bvh = build_bvh(objs, num_objs); // Make sure to allocate the BVH node
     }
+
 
     // Print the BVH nodes
     for (int i = 0; i < num_objs; ++i) {
