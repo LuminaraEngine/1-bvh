@@ -28,12 +28,12 @@ namespace bvh{
     }
 
 BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
-    // Handle empty or invalid input
-    if (start >= end || tris == nullptr) {
-        return nullptr;
-    }
-
     int num_tris = end - start;
+
+    // Handle empty or invalid input
+    if (start < 0 || end > num_tris || start >= end || tris == nullptr) {
+      return nullptr; // Return null for invalid ranges
+    }
 
     // Initialize bounding box values
     float min_x = std::numeric_limits<float>::max();
@@ -62,7 +62,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     vec3<float> min(min_x, min_y, min_z);
     vec3<float> max(max_x, max_y, max_z);
 
-    // Handle the leaf case
+    // Handle the leaf case MAYBE MOVE THIS AFTER SORTING
     if (num_tris <= BVH_LEAF_SIZE) {
         std::vector<int> indices(num_tris);
         for (int i = 0; i < num_tris; i++) {
@@ -72,51 +72,49 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     }
 
     // Compute the centroids of the triangles to decide on partitioning
-    std::vector<vec3<float>> centroids(num_tris);
+    std::vector<vec3<float>> centroids(end - start);
     for (int i = start; i < end; i++) {
         centroids[i - start] = (tris[i].vertices[0] + tris[i].vertices[1] + tris[i].vertices[2]) / 3.0f;
-        std::cout << "centroid: " << centroids[i - start].x << " " << centroids[i - start].y << " " << centroids[i - start].z << std::endl;
+    }
+    std::vector<int> indices(centroids.size());
+    for (int i = 0; i < indices.size(); ++i) {
+        indices[i] = i;  // Fill with 0, 1, 2, ..., N-1
     }
 
-    // Determine the longest axis for splitting
-    vec3<float> centroid_min(
-        std::numeric_limits<float>::max(),
-        std::numeric_limits<float>::max(),
-        std::numeric_limits<float>::max()
-    );
-    vec3<float> centroid_max(
-        std::numeric_limits<float>::lowest(),
-        std::numeric_limits<float>::lowest(),
-        std::numeric_limits<float>::lowest()
-    );
+    // // Determine the longest axis for splitting
+    // vec3<float> centroid_min(
+    //     std::numeric_limits<float>::max(),
+    //     std::numeric_limits<float>::max(),
+    //     std::numeric_limits<float>::max()
+    // );
+    // vec3<float> centroid_max(
+    //     std::numeric_limits<float>::lowest(),
+    //     std::numeric_limits<float>::lowest(),
+    //     std::numeric_limits<float>::lowest()
+    // );
 
-    for (const auto& centroid : centroids) {
-        centroid_min = vec3<float>::min(centroid_min, centroid);
-        centroid_max = vec3<float>::max(centroid_max, centroid);
-    }
+    // for (const auto& centroid : centroids) {
+    //     centroid_min = vec3<float>::min(centroid_min, centroid);
+    //     centroid_max = vec3<float>::max(centroid_max, centroid);
+    // }
 
     // // Find the longest axis
     // vec3<float> extent = centroid_max - centroid_min;
     // int axis = (extent.x > extent.y && extent.x > extent.z) ? 0 : 
     //            (extent.y > extent.z) ? 1 : 2;
 
-    // // Sort triangles based on their centroids along the selected axis
-    // std::sort(tris + start, tris + end, [axis, &centroids, tris, start](const Triangle& a, const Triangle& b) {
-    //     vec3<float> centroidA = centroids[&a - (tris + start)];
-    //     vec3<float> centroidB = centroids[&b - (tris + start)];
-    //     return (axis == 0) ? centroidA.x < centroidB.x :
-    //            (axis == 1) ? centroidA.y < centroidB.y :
-    //            centroidA.z < centroidB.z; // If axis is 2
-    // });
-
-    std::sort(tris + start, tris + end, [&centroids, tris, start](const Triangle& a, const Triangle& b) {
-      vec3<float> centroidA = centroids[&a - (tris + start)];
-      vec3<float> centroidB = centroids[&b - (tris + start)];
-      return centroidA.x < centroidB.x;
-    });
     // NEED TO UPDATE THE INDICES AFTER SORTING
     for (int i = start; i < end; i++) {
-        std::cout << "centroid: " << centroids[i - start].x << " " << centroids[i - start].y << " " << centroids[i - start].z << std::endl;
+        std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
+    }
+    // Sort triangles based on their centroids along the x-axis
+    std::sort(centroids.begin(), centroids.end(), [](const vec3<float>& a, const vec3<float>& b) {
+        return a.x < b.x;
+    });
+    
+    // NEED TO UPDATE THE INDICES AFTER SORTING
+    for (int i = start; i < end; i++) {
+        std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
     }
     // Split the triangles in half
     int mid = start + num_tris / 2;
@@ -165,16 +163,24 @@ BvhNode* build_bvh(Object* objs, int num_objs, int start) {
     parentBvh->bounding_box = combinedBoundingBox;
 
     // Split the bounding boxes into left and right
-    // Comment: a parent cannot have a single child
-    size_t midIndex = bvhNodes.size() / 2;
-    if (midIndex > 0) {
+    // Comment: a parent cannot have a single child 
+    size_t midIndex = bvhNodes.size() / 2; // 5->2, 4->2, 3->1, 2->1, 1->0
+    if (midIndex > 1) {
         parentBvh->left = build_bvh(objs, midIndex, start); // Recursively build left BVH
         parentBvh->right = build_bvh(objs, num_objs - midIndex, start + midIndex); // Recursively build right BVH
     } 
-    else {
-        // Handle the case where there's only one node
+    else{
+      if (bvhNodes.size() == 1){
+        return bvhNodes[0];
+      }
+      if (bvhNodes.size() == 2){
         parentBvh->left = bvhNodes[0];
-        parentBvh->right = nullptr; // No right child
+        parentBvh->right = bvhNodes[1];
+      }
+      if (bvhNodes.size() == 3){
+        parentBvh->left = build_bvh(objs, 2, start);
+        parentBvh->right = bvhNodes[2];
+      }
     }
 
     return parentBvh; // Return the new parent BVH node

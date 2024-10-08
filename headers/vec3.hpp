@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <iostream>
 
 namespace bvh {
 
@@ -28,6 +29,11 @@ namespace bvh {
 
     bool operator==(const vec3<T>& other) const {
             return (x == other.x) && (y == other.y) && (z == other.z);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const vec3<T>& vec) {
+        os << "vec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+        return os;
     }
 
     // Static method to get the minimum of two vec3

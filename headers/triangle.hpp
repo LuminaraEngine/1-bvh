@@ -12,6 +12,5 @@ namespace bvh {
     vec3<float> normals[3];     // Normal vectors
     bool smooth;                // Smooth shading
   } Triangle;
-
-  std::vector<Triangle> generateRandomTriangles(int numTriangles, float rangeMin, float rangeMax);
+  
 }

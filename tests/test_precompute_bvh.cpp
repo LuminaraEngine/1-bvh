@@ -5,13 +5,14 @@
 #include <triangle.hpp>
 #include <iostream>
 #include <random>
+#include <generateRandomTriangles.hpp>
 
 
 void bvh::tests::precompute_bvh() {
     std::cout << "Starting precompute_bvh tests..." << std::endl;
 
     // Test Case 1: Basic Validity Test
-    std::vector<Triangle> randomTriangles = generateRandomTriangles(8, 0.0f, 10.0f);
+    std::vector<Triangle> randomTriangles = generateRandomTriangles(16, 0.0f, 10.0f);
 
     BvhNode* rootNode = precompute_bvh(randomTriangles.data(), 0, randomTriangles.size());
     assert(rootNode != nullptr, "BVH root node should not be null");
