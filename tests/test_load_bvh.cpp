@@ -2,10 +2,12 @@
 #include <custom_assert.hpp>
 #include <object.hpp>
 
-void bvh::tests::load_bvh() {
+void bvh::tests::load_bvh()
+{
   Object *obj = Object::load("../tests/data/final/triangle.obj", "../tests/data/final/leaf.bvh");
 
-  if (obj == nullptr) {
+  if (obj == nullptr)
+  {
     assert(false, "Failed to load object from .obj and .bvh files");
   }
 
