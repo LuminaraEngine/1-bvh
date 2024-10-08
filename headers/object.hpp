@@ -4,27 +4,31 @@
 #include <triangle.hpp>
 #include <bvh_node.hpp>
 
-namespace bvh {
+namespace bvh
+{
 
-  class Object {
+  class Object
+  {
   public:
-    vec3<float> position;
-    vec3<float> rotation;
-    vec3<float> scale;
+    vec3<float> position; // Vector specifying where the object is placed in space
+    vec3<float> rotation; // Vector specifying the prientation of the object
+    vec3<float> scale;    // Vector specifying the cale of the object in the 3D world
 
-    Triangle* triangles;
-    int num_triangles;
+    Triangle *triangles; // Triangles stored to represent the surface of the object
+    int num_triangles;   // Number of triangles in the object
 
-    BvhNode *bvh;
+    BvhNode *bvh; // Pointer to the root node of the object's BVH
 
-    static void build_bvh(char* obj_filename, char* bvh_filename);
+    static void build_bvh(char *obj_filename, char *bvh_filename);
 
-    static Object* load(char* obj_filename, char* bvh_filename);
+    static void save_bvh(char *bvh_filename, BvhNode *bvh);
+
+    static Object *load(char *obj_filename, char *bvh_filename);
 
     ~Object();
 
-  private:
-    Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
+  public:
+    Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode *bvh);
   };
 
 }
