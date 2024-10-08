@@ -19,8 +19,13 @@ namespace bvh {
 
     static void build_bvh(char* obj_filename, char* bvh_filename);
 
-    static Object* load(char* obj_filename, char* bvh_filename);
+    // Method to get the BVH
+    BvhNode* getBvh() const {
+        return bvh;
+    }
 
+    static Object* load(char* obj_filename, char* bvh_filename);
+    
     ~Object();
 
   private:

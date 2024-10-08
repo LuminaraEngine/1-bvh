@@ -1,7 +1,7 @@
 #include <ansi_colors.hpp>
 #include <custom_assert.hpp>
 #include <test_load_bvh.hpp>
-
+#include <test_precompute_bvh.hpp>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -11,7 +11,8 @@
 
 // Add new tests here
 std::unordered_map<std::string, void (*)()> tests = {
-  {"load_bvh", bvh::tests::load_bvh}
+  {"load_bvh", bvh::tests::load_bvh},
+  {"precompute_bvh", bvh::tests::precompute_bvh}
 };
 
 

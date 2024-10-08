@@ -2,6 +2,7 @@
 
 #include <vec2.hpp>
 #include <vec3.hpp>
+#include <vector> // Include vector for std::vector
 
 namespace bvh {
 
@@ -12,4 +13,5 @@ namespace bvh {
     bool smooth;                // Smooth shading
   } Triangle;
 
+  std::vector<Triangle> generateRandomTriangles(int numTriangles, float rangeMin, float rangeMax);
 }
