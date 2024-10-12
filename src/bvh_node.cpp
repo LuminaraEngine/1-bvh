@@ -15,8 +15,14 @@ BvhNode::BvhNode(vec3<float> min, vec3<float> max) : bounding_box(min, max) {
 }
 
 BvhNode::~BvhNode() {
-  delete this->left;
-  delete this->right;
+  if (left) {
+    delete left;
+    left = nullptr;  // Set to nullptr after deletion to avoid dangling pointer issues
+  }
+  if (right) {
+    delete right;
+    right = nullptr;  // Same here
+  }
 }
 
 void BvhNode::print() {

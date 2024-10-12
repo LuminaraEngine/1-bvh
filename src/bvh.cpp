@@ -70,52 +70,45 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
         }
         return new BvhLeaf(min, max, num_tris, indices.data());
     }
-
     // Compute the centroids of the triangles to decide on partitioning
     std::vector<vec3<float>> centroids(end - start);
     for (int i = start; i < end; i++) {
         centroids[i - start] = (tris[i].vertices[0] + tris[i].vertices[1] + tris[i].vertices[2]) / 3.0f;
     }
+
+    // Initialize indices
     std::vector<int> indices(centroids.size());
     for (int i = 0; i < indices.size(); ++i) {
         indices[i] = i;  // Fill with 0, 1, 2, ..., N-1
     }
 
-    // // Determine the longest axis for splitting
-    // vec3<float> centroid_min(
-    //     std::numeric_limits<float>::max(),
-    //     std::numeric_limits<float>::max(),
-    //     std::numeric_limits<float>::max()
-    // );
-    // vec3<float> centroid_max(
-    //     std::numeric_limits<float>::lowest(),
-    //     std::numeric_limits<float>::lowest(),
-    //     std::numeric_limits<float>::lowest()
-    // );
-
-    // for (const auto& centroid : centroids) {
-    //     centroid_min = vec3<float>::min(centroid_min, centroid);
-    //     centroid_max = vec3<float>::max(centroid_max, centroid);
-    // }
-
-    // // Find the longest axis
-    // vec3<float> extent = centroid_max - centroid_min;
-    // int axis = (extent.x > extent.y && extent.x > extent.z) ? 0 : 
-    //            (extent.y > extent.z) ? 1 : 2;
-
-    // NEED TO UPDATE THE INDICES AFTER SORTING
+    // Print initial centroids
     for (int i = start; i < end; i++) {
         std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
     }
-    // Sort triangles based on their centroids along the x-axis
-    std::sort(centroids.begin(), centroids.end(), [](const vec3<float>& a, const vec3<float>& b) {
-        return a.x < b.x;
+
+    // Sort indices based on the centroid values along the x-axis
+    std::sort(indices.begin(), indices.end(), [&centroids](int a, int b) {
+        return centroids[a].x < centroids[b].x;
     });
-    
-    // NEED TO UPDATE THE INDICES AFTER SORTING
-    for (int i = start; i < end; i++) {
-        std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
+
+    // After sorting, update the triangles based on the sorted indices
+    std::vector<bvh::Triangle> sortedTris(end - start);
+    for (int i = 0; i < indices.size(); ++i) {
+        sortedTris[i] = tris[start + indices[i]];
     }
+
+    // Copy the sorted triangles back to the original tris array
+    for (int i = 0; i < sortedTris.size(); ++i) {
+        tris[start + i] = sortedTris[i];
+    }
+
+    // Print the centroids after sorting to confirm
+    for (int i = start; i < end; i++) {
+        std::cout << "Triangle Index: " << indices[i - start] << "Triangle Data" << tris[i-start].vertices->x << " Centroid: " << centroids[indices[i - start]].x << std::endl;
+    }
+
+
     // Split the triangles in half
     int mid = start + num_tris / 2;
 
@@ -131,7 +124,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     return node;
 }
 
-BvhNode* build_bvh(Object* objs, int num_objs, int start) {
+BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
     std::vector<BvhNode*> bvhNodes;
 
     // Collect BVHs from each object starting from 'start'
@@ -166,8 +159,8 @@ BvhNode* build_bvh(Object* objs, int num_objs, int start) {
     // Comment: a parent cannot have a single child 
     size_t midIndex = bvhNodes.size() / 2; // 5->2, 4->2, 3->1, 2->1, 1->0
     if (midIndex > 1) {
-        parentBvh->left = build_bvh(objs, midIndex, start); // Recursively build left BVH
-        parentBvh->right = build_bvh(objs, num_objs - midIndex, start + midIndex); // Recursively build right BVH
+        parentBvh->left = build_bvh_from_objects(objs, midIndex, start); // Recursively build left BVH
+        parentBvh->right = build_bvh_from_objects(objs, num_objs - midIndex, start + midIndex); // Recursively build right BVH
     } 
     else{
       if (bvhNodes.size() == 1){
@@ -178,7 +171,7 @@ BvhNode* build_bvh(Object* objs, int num_objs, int start) {
         parentBvh->right = bvhNodes[1];
       }
       if (bvhNodes.size() == 3){
-        parentBvh->left = build_bvh(objs, 2, start);
+        parentBvh->left = build_bvh_from_objects(objs, 2, start);
         parentBvh->right = bvhNodes[2];
       }
     }
