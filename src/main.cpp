@@ -1,6 +1,7 @@
 #include <ansi_colors.hpp>
 #include <custom_assert.hpp>
 #include <test_load_bvh.hpp>
+#include <test_save_bvh.hpp>
 
 #include <iostream>
 #include <cstdio>
@@ -9,8 +10,10 @@
 #include <chrono>
 
 // Add new tests here
+
 std::unordered_map<std::string, void (*)()> tests = {
-    {"load_bvh", bvh::tests::load_bvh}};
+    {"load_bvh", bvh::tests::load_bvh},
+    {"save_bvh_test", bvh::tests::save_bvh_test}};
 
 bool run_one_test(std::string test_name, void (*test_funct)())
 {

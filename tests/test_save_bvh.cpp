@@ -7,8 +7,9 @@
 #include <triangle.hpp>
 #include <bvh_node.hpp>
 #include <bvh.hpp>
+#include <custom_assert.hpp>
 
-void bvh::tests::save_bvh_test_1()
+void save_bvh_test_base_case()
 {
     // Create test triangles for the BVH leaf nodes
     int num_triangles = 3;
@@ -51,7 +52,7 @@ void bvh::tests::save_bvh_test_1()
     bvh::Object obj(position, rotation, scale, test_triangles, 3, root);
 
     // Save the BVH to a file
-    const char *bvh_filename = "test_bvh.bvh";
+    const char *bvh_filename = "./tests/test_save_bvh_base_case.bvh";
     obj.save_bvh(const_cast<char *>(bvh_filename), root);
 }
 
@@ -62,8 +63,7 @@ void bvh::tests::save_bvh_test_1()
    /  \     /  \
 ll1   rl1 ll2  rl2
 */
-
-void save_bvh_test_2()
+void save_bvh_test_n_case()
 {
     // Create test triangles for the BVH leaf nodes
     int num_triangles = 6;
@@ -126,6 +126,55 @@ void save_bvh_test_2()
     bvh::Object obj(position, rotation, scale, test_triangles, 3, root);
 
     // Save the BVH to a file
-    const char *bvh_filename = "test_bvh.bvh";
+    const char *bvh_filename = "./tests/test_save_bvh_n_case.bvh";
     obj.save_bvh(const_cast<char *>(bvh_filename), root);
+}
+
+void compare_bvh_files(const char *filename1, const char *filename2)
+{
+    FILE *file1 = fopen(filename1, "r");
+    if (file1 == NULL) // Manage if file could not be opened
+
+    {
+        assert(false, "Could not open file " + std::string(filename1));
+    }
+
+    FILE *file2 = fopen(filename2, "r");
+    if (file2 == NULL) // Manage if file could not be opened
+    {
+        assert(false, "Could not open file " + std::string(filename2));
+    }
+
+    char line1[1000];
+    char line2[1000];
+    int line_number = 1;
+
+    while (fgets(line1, 1000, file1) && fgets(line2, 1000, file2))
+    {
+        // Remove newline characters
+        line1[strcspn(line1, "\n")] = 0;
+        line2[strcspn(line2, "\n")] = 0;
+
+        // Compare both lines
+        if (strcmp(line1, line2) != 0)
+        {
+            // Show the difference
+            assert(false, "Files are not equal at line " + std::to_string(line_number) + ":\n");
+            std::cout << "File 1: " << line1;
+            std::cout << "File 2: " << line2;
+        }
+        line_number++;
+    }
+
+    fclose(file1);
+    fclose(file2);
+}
+
+void bvh::tests::save_bvh_test()
+{
+    // save_bvh_test_base_case();
+    // compare_bvh_files("test_save_bvh_base_case.bvh", "test_save_bvh_base_case_results.bvh");
+
+    save_bvh_test_n_case();
+    compare_bvh_files("./tests/test_save_bvh_n_case.bvh", "./tests/test_save_bvh_n_case_results.bvh");
 }
