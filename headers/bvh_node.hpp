@@ -15,8 +15,8 @@ namespace bvh {
 
       BvhNode();
       BvhNode(vec3<float> min, vec3<float> max);
-      ~BvhNode();
-      virtual void print();
+      virtual ~BvhNode();
+      virtual void print(int depth=0);
   };
 
   class BvhLeaf : public BvhNode {
@@ -27,7 +27,7 @@ namespace bvh {
       BvhLeaf();
       BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices);
       ~BvhLeaf();
-      void print() override;
+      void print(int depth) override;
   };
 
 }

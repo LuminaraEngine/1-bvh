@@ -12,6 +12,7 @@ namespace bvh {
 
     BoundingBox(vec3<float> min, vec3<float> max);
 
+    bool operator==(const BoundingBox& other) const;
 
   };
 
