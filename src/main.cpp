@@ -64,7 +64,11 @@ void run_all_tests() {
   int num_tests = tests.size();
   int num_passed = 0;
 
+    std::cout << "Running all tests..." << std::endl;
+
+
   for (auto const& test : tests) {
+    std::cout << "Running test: " << test.first << std::endl; 
     if (run_one_test(test.first, test.second)) {
       num_passed++;
     }

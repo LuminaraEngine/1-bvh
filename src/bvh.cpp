@@ -176,7 +176,7 @@ BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
         parentBvh->left = build_bvh_from_objects(objs, num_objs - midIndex, start + midIndex);
         parentBvh->right = build_bvh_from_objects(objs, midIndex, start);  
     }
-
+    std::cout << "Returning parent: " << parentBvh << std::endl;
     return parentBvh; // Return the new parent BVH node
 }
 }

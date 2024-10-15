@@ -15,7 +15,7 @@ namespace bvh {
 
       BvhNode();
       BvhNode(vec3<float> min, vec3<float> max);
-      ~BvhNode();
+      virtual ~BvhNode();
       virtual void print(int depth=0);
   };
 

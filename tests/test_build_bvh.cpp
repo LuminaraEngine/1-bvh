@@ -66,7 +66,4 @@ void bvh::tests::build_bvh() {
 
     std::cout << "BVH structure has been successfully built and validated." << std::endl;
 
-    // Step 9: Clean up
-    bvh1->print();
-    delete bvh1;
 }
