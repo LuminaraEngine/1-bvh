@@ -11,18 +11,35 @@
 
 void bvh::tests::build_bvh() {
     // Create a few mock triangles for each object
-    Triangle tris1[] = {
-        { vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 0.0f, 0.0f), vec3<float>(0.0f, 1.0f, 0.0f) }
-    };
-    Triangle tris2[] = {
-        { vec3<float>(2.0f, 2.0f, 2.0f), vec3<float>(3.0f, 2.0f, 2.0f), vec3<float>(2.0f, 3.0f, 2.0f) }
-    };
-    Triangle tris3[] = {
-        { vec3<float>(4.0f, 4.0f, 4.0f), vec3<float>(5.0f, 4.0f, 4.0f), vec3<float>(4.0f, 5.0f, 4.0f) }
-    };
-    Triangle tris4[] = {
-        { vec3<float>(6.0f, 6.0f, 6.0f), vec3<float>(7.0f, 6.0f, 6.0f), vec3<float>(6.0f, 7.0f, 6.0f) }
-    };
+    // Triangle tris1[] = {
+    //     { vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 0.0f, 0.0f), vec3<float>(0.0f, 1.0f, 0.0f) }
+    // };
+    // Triangle tris2[] = {
+    //     { vec3<float>(2.0f, 2.0f, 2.0f), vec3<float>(3.0f, 2.0f, 2.0f), vec3<float>(2.0f, 3.0f, 2.0f) }
+    // };
+    // Triangle tris3[] = {
+    //     { vec3<float>(4.0f, 4.0f, 4.0f), vec3<float>(5.0f, 4.0f, 4.0f), vec3<float>(4.0f, 5.0f, 4.0f) }
+    // };
+    // Triangle tris4[] = {
+    //     { vec3<float>(6.0f, 6.0f, 6.0f), vec3<float>(7.0f, 6.0f, 6.0f), vec3<float>(6.0f, 7.0f, 6.0f) }
+    // };
+
+    Triangle* tri1 = new Triangle();
+    Triangle* tri2 = new Triangle();
+    Triangle* tri3 = new Triangle();
+    Triangle* tri4 = new Triangle();
+    tri1->vertices[0] = vec3<float>(0.0f, 0.0f, 0.0f);
+    tri1->vertices[1] = vec3<float>(1.0f, 0.0f, 0.0f);
+    tri1->vertices[2] = vec3<float>(0.0f, 1.0f, 0.0f);
+    tri2->vertices[0] = vec3<float>(2.0f, 2.0f, 2.0f);
+    tri2->vertices[1] = vec3<float>(3.0f, 2.0f, 2.0f);
+    tri2->vertices[2] = vec3<float>(2.0f, 3.0f, 2.0f);
+    tri3->vertices[0] = vec3<float>(4.0f, 4.0f, 4.0f);
+    tri3->vertices[1] = vec3<float>(5.0f, 4.0f, 4.0f);
+    tri3->vertices[2] = vec3<float>(4.0f, 5.0f, 4.0f);
+    tri4->vertices[0] = vec3<float>(6.0f, 6.0f, 6.0f);
+    tri4->vertices[1] = vec3<float>(7.0f, 6.0f, 6.0f);
+    tri4->vertices[2] = vec3<float>(6.0f, 7.0f, 6.0f);
 
     // Create the mock BVH nodes for these objects with bounding boxes
     BvhNode* bvh1 = new BvhNode();
@@ -39,13 +56,14 @@ void bvh::tests::build_bvh() {
 
 
     // Create mock objects with position, rotation, scale, triangles, and BVH
-    Object obj1(vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tris1, 1, bvh1);
-    Object obj2(vec3<float>(2.0f, 2.0f, 2.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tris2, 1, bvh2);
-    Object obj3(vec3<float>(4.0f, 4.0f, 4.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tris3, 1, bvh3);
-    Object obj4(vec3<float>(6.0f, 6.0f, 6.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tris4, 1, bvh4);
 
     // Create an array of these objects
-    Object objects[] = { obj1, obj2, obj3, obj4 };
+    Object objects[] = {
+        Object(vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tri1, 1, bvh1),
+        Object(vec3<float>(2.0f, 2.0f, 2.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tri2, 1, bvh2),
+        Object(vec3<float>(4.0f, 4.0f, 4.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tri3, 1, bvh3),
+        Object(vec3<float>(6.0f, 6.0f, 6.0f), vec3<float>(0.0f, 0.0f, 0.0f), vec3<float>(1.0f, 1.0f, 1.0f), tri4, 1, bvh4)
+    };
 
     // Call build_bvh
     BvhNode* rootBvh = build_bvh_from_objects(objects, 4, 0);
