@@ -31,6 +31,10 @@ namespace bvh {
             return (x == other.x) && (y == other.y) && (z == other.z);
     }
 
+    bool operator!=(const vec3<T>& other) const { // keep this below the operator== definition
+        return !(*this == other);
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const vec3<T>& vec) {
         os << "vec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;

@@ -31,7 +31,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     int num_tris = end - start;
 
     // Handle empty or invalid input
-    if (start < 0 || end > num_tris || start >= end || tris == nullptr) {
+    if (start < 0 || end > start+num_tris || start >= end || tris == nullptr) {
       return nullptr; // Return null for invalid ranges
     }
 
