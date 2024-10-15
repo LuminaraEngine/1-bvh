@@ -55,8 +55,8 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
             max_z = std::max(max_z, vertex.z);
         }
     }
-    std::cout << "min_x: " << min_x << " min_y: " << min_y << " min_z: " << min_z << std::endl;
-    std::cout << "max_x: " << max_x << " max_y: " << max_y << " max_z: " << max_z << std::endl;
+    //std::cout << "min_x: " << min_x << " min_y: " << min_y << " min_z: " << min_z << std::endl;
+    //std::cout << "max_x: " << max_x << " max_y: " << max_y << " max_z: " << max_z << std::endl;
 
     // Construct the bounding box for the current node
     vec3<float> min(min_x, min_y, min_z);
@@ -83,9 +83,9 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     }
 
     // Print initial centroids
-    for (int i = start; i < end; i++) {
-        std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
-    }
+    //for (int i = start; i < end; i++) {
+    //    std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
+    //}
 
     // Sort indices based on the centroid values along the x-axis
     std::sort(indices.begin(), indices.end(), [&centroids](int a, int b) {
@@ -104,9 +104,9 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     }
 
     // Print the centroids after sorting to confirm
-    for (int i = start; i < end; i++) {
-        std::cout << "Triangle Index: " << indices[i - start] << "Triangle Data" << tris[i-start].vertices->x << " Centroid: " << centroids[indices[i - start]].x << std::endl;
-    }
+    //for (int i = start; i < end; i++) {
+    //    std::cout << "Triangle Index: " << indices[i - start] << "Triangle Data" << tris[i-start].vertices->x << " Centroid: " << centroids[indices[i - start]].x << std::endl;
+    //}
 
 
     // Split the triangles in half

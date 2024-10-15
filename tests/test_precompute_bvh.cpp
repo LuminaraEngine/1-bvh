@@ -11,7 +11,7 @@ namespace bvh::tests {
 
 // Helper function, only used in this file
 static bool verify_leaf_bounding_box(BvhNode* node, Triangle* tris) {
-    std::cout << "verify_leaf_bounding_box start" << std::endl;
+    //std::cout << "verify_leaf_bounding_box start" << std::endl;
     if (node == nullptr) { return true; } // true -> no box to check
 
     BvhLeaf* leaf = dynamic_cast<BvhLeaf*>(node);
@@ -53,7 +53,7 @@ static bool check_all_bounding_box(BvhNode* node, Triangle* tris) {
     } // true -> no box to check
 
     if (!node->left && !node->right) {
-        std::cout << "found leaf node" << std::endl;
+        //std::cout << "found leaf node" << std::endl;
         return verify_leaf_bounding_box(node, tris);
     }
 
@@ -117,32 +117,14 @@ void precompute_bvh() {
     std::cout << "Starting precompute_bvh tests..." << std::endl;
 
     // Generate random triangles for all tests
-    std::vector<Triangle> randomTriangles = generateRandomTriangles(16, 0.0f, 10.0f);
+    std::vector<Triangle> randomTriangles = generateRandomTriangles(100, 0.0f, 10.0f);
+    std::cout << "Number of triangles: " << randomTriangles.size() << std::endl;
 
     // Test Case 1: BVH Structure Integrity Test
     BvhNode* rootNode = precompute_bvh(randomTriangles.data(), 0, randomTriangles.size());
     assert(rootNode != nullptr, "BVH root node should not be null");
     assert(check_bvh_integrity(rootNode), "BVH structure is invalid");
     std::cout << "Test Case 1 passed: BVH has proper structure" << std::endl;
-
-    // Test Case 2: Bounding Box Test
-    // vec3<float> expectedMin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-    // vec3<float> expectedMax(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest());
-
-    // for (const Triangle& tri : randomTriangles) {
-    //     for (const vec3<float>& vertex : tri.vertices) {
-    //         expectedMin.x = std::min(expectedMin.x, vertex.x);
-    //         expectedMin.y = std::min(expectedMin.y, vertex.y);
-    //         expectedMin.z = std::min(expectedMin.z, vertex.z);
-    //         expectedMax.x = std::max(expectedMax.x, vertex.x);
-    //         expectedMax.y = std::max(expectedMax.y, vertex.y);
-    //         expectedMax.z = std::max(expectedMax.z, vertex.z);
-    //     }
-    // }
-
-    // assert(rootNode->bounding_box.min == expectedMin, "Expected min bounding box does not match");
-    // assert(rootNode->bounding_box.max == expectedMax, "Expected max bounding box does not match");
-    // std::cout << "Test Case 2 passed: Bounding box matches expected values." << std::endl;
 
     // Test Case 2: Bounding Box Test for All Nodes
     bool is_bounding_box_valid = check_all_bounding_box(rootNode, randomTriangles.data());
