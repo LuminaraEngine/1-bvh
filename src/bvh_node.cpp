@@ -14,9 +14,9 @@ BvhNode::BvhNode(vec3<float> min, vec3<float> max) : bounding_box(min, max) {
 }
 
 BvhNode::~BvhNode() {
-  std::cout << "Deleting BvhNode" << this <<  std::endl;
-  std::cout << "Deleting left" << this->left <<  std::endl;
-  std::cout << "Deleting right" << this->right <<  std::endl;
+  //std::cout << "Deleting BvhNode" << this <<  std::endl;
+  //std::cout << "Deleting left" << this->left <<  std::endl;
+  //std::cout << "Deleting right" << this->right <<  std::endl;
   delete left;
   delete right;
 }
@@ -74,11 +74,14 @@ BvhLeaf::BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indic
 BvhLeaf::~BvhLeaf() {}
 
 void BvhLeaf::print(int depth=0) {
-  printf("BvhLeaf\n");
-  printf("min: %f %f %f\n", this->bounding_box.min.x, this->bounding_box.min.y, this->bounding_box.min.z);
-  printf("max: %f %f %f\n", this->bounding_box.max.x, this->bounding_box.max.y, this->bounding_box.max.z);
-  printf("num_triangles: %d\n", this->num_triangles);
+  printf("%*sBvhLeaf\n", depth * 2, "");
+  printf("%*smin: %f %f %f\n", depth * 2, "", this->bounding_box.min.x, this->bounding_box.min.y, this->bounding_box.min.z);
+  printf("%*smax: %f %f %f\n", depth * 2, "", this->bounding_box.max.x, this->bounding_box.max.y, this->bounding_box.max.z);
+  printf("%*snum_triangles: %d\n", depth * 2, "", this->num_triangles);
   for (int i = 0; i < this->num_triangles; i++) {
+    if (i == 0) {
+      printf("%*s", depth * 2, "");
+    }
     printf("%i ", this->indices[i]);
   }
   printf("\n");

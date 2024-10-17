@@ -113,17 +113,53 @@ static bool check_bvh_integrity(BvhNode* node) {
     return check_bvh_integrity(node->left) && check_bvh_integrity(node->right);
 }
 
+// Helper function, only used in this file
+static int count_leaf_nodes(BvhNode* node) {
+    if (node == nullptr) {
+        return 0;
+    }
+
+    if (!node->left && !node->right) {
+        return 1;
+    }
+
+    return count_leaf_nodes(node->left) + count_leaf_nodes(node->right);
+}
+
+
+
 void precompute_bvh() {
     std::cout << "Starting precompute_bvh tests..." << std::endl;
 
     // Generate random triangles for all tests
-    std::vector<Triangle> randomTriangles = generateRandomTriangles(100, 0.0f, 10.0f);
+    std::vector<Triangle> randomTriangles = generateRandomTriangles(4352, 0.0f, 10.0f);
     std::cout << "Number of triangles: " << randomTriangles.size() << std::endl;
 
     // Test Case 1: BVH Structure Integrity Test
     BvhNode* rootNode = precompute_bvh(randomTriangles.data(), 0, randomTriangles.size());
     assert(rootNode != nullptr, "BVH root node should not be null");
     assert(check_bvh_integrity(rootNode), "BVH structure is invalid");
+
+    int numLeafNodes = count_leaf_nodes(rootNode);
+    assert(numLeafNodes > 0, "BVH should have at least one leaf node");
+    std::cout << "Number of leaf nodes in computed bvh: " << numLeafNodes << std::endl;
+
+    int d = std::ceil(std::log2((randomTriangles.size() + BVH_LEAF_SIZE - 1) / BVH_LEAF_SIZE)); // depth of the binary tree
+    int leaves = std::pow(2, d);
+    // Unique case when precompute_bvh splits the triangles:
+    // if the number of triangles is divisible by 17 and results in 2^k for some k=0,1,2,...
+    // need to substract the expected leaf nodes by that 2^k
+    if (randomTriangles.size() % 17 == 0) {
+        int n = randomTriangles.size() / 17;
+        if (std::ceil(std::log2(n)) == std::floor(std::log2(n))) { // n is a power of 2
+            leaves -= n;
+        }
+    }
+    std::cout << "Expected: " << leaves << " leaf nodes" << std::endl;
+
+    // this test would fail if the binary tree splitting heuristic of precompute_bvh is changed
+    assert(numLeafNodes == leaves, "Number of leaf nodes should match the expected value");
+    
     std::cout << "Test Case 1 passed: BVH has proper structure" << std::endl;
 
     // Test Case 2: Bounding Box Test for All Nodes

@@ -15,6 +15,9 @@ namespace bvh {
 
   /**
    * @brief Builds the BVH for a list of objects given the start index
+   * @param objs The list of objects
+   * @param num_objs The number of objects
+   * @param start The start index of the list of objects
    */
   BvhNode *build_bvh_from_objects(Object *objs, int num_objs, int start);
   BoundingBox computeCombinedBoundingBox(const std::vector<BvhNode*>& bvhNodes);
