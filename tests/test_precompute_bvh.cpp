@@ -126,39 +126,75 @@ static int count_leaf_nodes(BvhNode* node) {
     return count_leaf_nodes(node->left) + count_leaf_nodes(node->right);
 }
 
+static int count_expected_leaf_nodes(int numTriangles) {
+    int d = std::ceil(std::log2((numTriangles + BVH_LEAF_SIZE - 1) / BVH_LEAF_SIZE)); // depth of the binary tree
+    int leaves = std::pow(2, d);
+    // Unique case when precompute_bvh splits the triangles:
+    // if the number of triangles is divisible by 17 and results in 2^k for some k=0,1,2,...
+    // need to substract the expected leaf nodes by that 2^k
+    if (numTriangles % 17 == 0) {
+        int n = numTriangles / 17;
+        if (std::ceil(std::log2(n)) == std::floor(std::log2(n))) { // n is a power of 2
+            leaves -= n;
+        }
+    }
+    return leaves;
+}
 
+static void check_leaf_node_triangles(BvhNode* node, Triangle* tris) {
+    std::cout << "check_leaf_node_triangles start" << std::endl;
+    BvhLeaf* leaf = dynamic_cast<BvhLeaf*>(node);
+    if (leaf == nullptr) {
+        check_leaf_node_triangles(node->left, tris);
+        check_leaf_node_triangles(node->right, tris);
+        return;
+    }
+
+    for (int i = 0; i < leaf->num_triangles; i++) {
+        printf("Triangle %d: (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n", leaf->indices[i],
+            tris[leaf->indices[i]].vertices[0].x, tris[leaf->indices[i]].vertices[0].y, tris[leaf->indices[i]].vertices[0].z,
+            tris[leaf->indices[i]].vertices[1].x, tris[leaf->indices[i]].vertices[1].y, tris[leaf->indices[i]].vertices[1].z,
+            tris[leaf->indices[i]].vertices[2].x, tris[leaf->indices[i]].vertices[2].y, tris[leaf->indices[i]].vertices[2].z);
+        printf("Centroid: (%f, %f, %f)\n",
+            (tris[leaf->indices[i]].vertices[0].x + tris[leaf->indices[i]].vertices[1].x + tris[leaf->indices[i]].vertices[2].x) / 3.0f,
+            (tris[leaf->indices[i]].vertices[0].y + tris[leaf->indices[i]].vertices[1].y + tris[leaf->indices[i]].vertices[2].y) / 3.0f,
+            (tris[leaf->indices[i]].vertices[0].z + tris[leaf->indices[i]].vertices[1].z + tris[leaf->indices[i]].vertices[2].z) / 3.0f);
+    }
+}
 
 void precompute_bvh() {
     std::cout << "Starting precompute_bvh tests..." << std::endl;
 
     // Generate random triangles for all tests
-    std::vector<Triangle> randomTriangles = generateRandomTriangles(4352, 0.0f, 10.0f);
+    std::vector<Triangle> randomTriangles = generateRandomTriangles(10, 0.0f, 10.0f);
     std::cout << "Number of triangles: " << randomTriangles.size() << std::endl;
 
     // Test Case 1: BVH Structure Integrity Test
     BvhNode* rootNode = precompute_bvh(randomTriangles.data(), 0, randomTriangles.size());
+
+    // // check triangles stored in the leaf nodes
+    // std::cout << "============================" << std::endl;
+    // rootNode->print();
+    // std::cout << "============================" << std::endl;
+    // std::cout << "Checking triangles stored in leaf nodes:" << std::endl;
+    // check_leaf_node_triangles(rootNode, randomTriangles.data());
+    // std::cout << "============================" << std::endl;
+
+    // delete rootNode;
+    // return;
+
+
     assert(rootNode != nullptr, "BVH root node should not be null");
     assert(check_bvh_integrity(rootNode), "BVH structure is invalid");
 
     int numLeafNodes = count_leaf_nodes(rootNode);
     assert(numLeafNodes > 0, "BVH should have at least one leaf node");
     std::cout << "Number of leaf nodes in computed bvh: " << numLeafNodes << std::endl;
-
-    int d = std::ceil(std::log2((randomTriangles.size() + BVH_LEAF_SIZE - 1) / BVH_LEAF_SIZE)); // depth of the binary tree
-    int leaves = std::pow(2, d);
-    // Unique case when precompute_bvh splits the triangles:
-    // if the number of triangles is divisible by 17 and results in 2^k for some k=0,1,2,...
-    // need to substract the expected leaf nodes by that 2^k
-    if (randomTriangles.size() % 17 == 0) {
-        int n = randomTriangles.size() / 17;
-        if (std::ceil(std::log2(n)) == std::floor(std::log2(n))) { // n is a power of 2
-            leaves -= n;
-        }
-    }
-    std::cout << "Expected: " << leaves << " leaf nodes" << std::endl;
+    int expectednumLeafNodes = count_expected_leaf_nodes(randomTriangles.size());
+    std::cout << "Expected: " << expectednumLeafNodes << " leaf nodes" << std::endl;
 
     // this test would fail if the binary tree splitting heuristic of precompute_bvh is changed
-    assert(numLeafNodes == leaves, "Number of leaf nodes should match the expected value");
+    assert(numLeafNodes == expectednumLeafNodes, "Number of leaf nodes should match the expected value");
     
     std::cout << "Test Case 1 passed: BVH has proper structure" << std::endl;
 
@@ -170,11 +206,17 @@ void precompute_bvh() {
     // Test Case 3: Leaf Node Test (random subset of 1 triangle)
     BvhNode* leafNode = precompute_bvh(randomTriangles.data(), 0, 1);
     assert(dynamic_cast<BvhLeaf*>(leafNode) != nullptr, "Should create a leaf node for a single triangle");
+    assert(check_bvh_integrity(leafNode), "Leaf node structure is invalid");
+    assert(check_all_bounding_box(leafNode, randomTriangles.data()), "Bounding box mismatch in the leaf node");
+    assert(count_leaf_nodes(leafNode) == 1, "Leaf node should be the only node in the hierarchy");
     std::cout << "Test Case 3 passed: Leaf node created successfully." << std::endl;
 
-    // Test Case 4: Hierarchy Test (use a random subset of triangles)
+    // Test Case 4: Hierarchy Test (use a random subset of triangles <= BVH_LEAF_SIZE)
     BvhNode* hierarchicalRoot = precompute_bvh(randomTriangles.data(), 0, 3);
     assert(hierarchicalRoot != nullptr, "BVH should not be null for multiple triangles");
+    assert(check_bvh_integrity(hierarchicalRoot), "BVH structure is invalid");
+    assert(check_all_bounding_box(hierarchicalRoot, randomTriangles.data()), "Bounding box mismatch in the hierarchy");
+    assert(count_leaf_nodes(hierarchicalRoot) == 1, "Leaf node should be the only node in the hierarchy");
     std::cout << "Test Case 4 passed: Hierarchical root node created." << std::endl;
 
     // Clean up

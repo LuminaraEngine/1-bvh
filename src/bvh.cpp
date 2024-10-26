@@ -27,6 +27,71 @@ namespace bvh{
         return BoundingBox(minCorner, maxCorner);
     }
 
+// Splitting mechanics choose the longest axis. If the axis is the same, choose the one with the smallest minimum value.
+    int chooseSplitAxis(const BoundingBox& box) {
+        vec3<float> boxSize = box.max - box.min;
+        if (boxSize.x > boxSize.y && boxSize.x > boxSize.z) {
+            return 0; // Split along the x-axis
+        } else if (boxSize.y > boxSize.z) {
+            return 1; // Split along the y-axis
+        } else {
+            return 2; // Split along the z-axis
+        }
+    }
+    
+static BvhNode* precompute_helper(Triangle* tris, std::vector<int> index_list, int start, int end){
+    int num_tris = end - start;
+
+    // Handle empty or invalid input
+    if (start < 0 || end > start+num_tris || start >= end || index_list.data() == nullptr) {
+      return nullptr; // Return null for invalid ranges
+    }
+
+    // Initialize bounding box values
+    float min_x = std::numeric_limits<float>::max();
+    float min_y = std::numeric_limits<float>::max();
+    float min_z = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float max_y = std::numeric_limits<float>::lowest();
+    float max_z = std::numeric_limits<float>::lowest();
+    std::vector<int> indices(index_list.begin() + start, index_list.begin() + end);
+
+    // Calculate the bounding box
+    for (int i = 0; i < num_tris; i++) {
+        for (int j = 0; j < 3; j++) {
+            const vec3<float>& vertex = tris[indices[i]].vertices[j];
+            min_x = std::min(min_x, vertex.x);
+            min_y = std::min(min_y, vertex.y);
+            min_z = std::min(min_z, vertex.z);
+            max_x = std::max(max_x, vertex.x);
+            max_y = std::max(max_y, vertex.y);
+            max_z = std::max(max_z, vertex.z);
+        }
+    }
+
+    // Construct the bounding box for the current node
+    vec3<float> min(min_x, min_y, min_z);
+    vec3<float> max(max_x, max_y, max_z);
+
+    if (num_tris <= BVH_LEAF_SIZE) {
+        return new BvhLeaf(min, max, num_tris, indices.data());
+    }
+
+    // Split the triangles in half
+    int mid = start + num_tris / 2;
+
+    // Recursively build the left and right child nodes
+    BvhNode* leftChild = precompute_helper(tris,index_list, start, mid);
+    BvhNode* rightChild = precompute_helper(tris,index_list, mid, end); // Use end here
+
+    // Create and return an internal node with the bounding box and child nodes
+    BvhNode* node = new BvhNode(min, max);
+    node->left = leftChild;
+    node->right = rightChild;
+
+    return node;
+}
+
 BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     int num_tris = end - start;
 
@@ -55,12 +120,43 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
             max_z = std::max(max_z, vertex.z);
         }
     }
-    //std::cout << "min_x: " << min_x << " min_y: " << min_y << " min_z: " << min_z << std::endl;
-    //std::cout << "max_x: " << max_x << " max_y: " << max_y << " max_z: " << max_z << std::endl;
 
     // Construct the bounding box for the current node
     vec3<float> min(min_x, min_y, min_z);
     vec3<float> max(max_x, max_y, max_z);
+
+    // Compute the centroids of the triangles to decide on partitioning
+    std::vector<vec3<float>> centroids(end - start);
+    for (int i = start; i < end; i++) {
+        centroids[i - start] = (tris[i].vertices[0] + tris[i].vertices[1] + tris[i].vertices[2]) / 3.0f;
+        std::cout << "Centroid: " << centroids[i - start] << "for triangle" << i << std::endl;
+    }
+
+    // Initialize indices
+    std::vector<int> indices(centroids.size());
+    for (int i = 0; i < indices.size(); i++) {
+        indices[i] = i;  // Fill with 0, 1, 2, ..., N-1
+    }
+
+    int splitAxis = chooseSplitAxis(BoundingBox(min, max));
+
+    // Sort indices based on the longest axis
+    std::sort(indices.begin(), indices.end(), [&centroids, splitAxis](int a, int b) {
+    if (splitAxis == 0) {
+        return centroids[a].x < centroids[b].x;
+    } else if (splitAxis == 1) {
+        return centroids[a].y < centroids[b].y;
+    } else {
+        return centroids[a].z < centroids[b].z;
+    }
+});
+
+    // After sorting, update the triangles based on the sorted indices
+    std::vector<bvh::Triangle> sortedTris(end - start);
+    for (int i = 0; i < indices.size(); i++) {
+        std::cout << "Index: " << indices[i] << std::endl;
+        sortedTris[i] = tris[start + indices[i]];
+    }
 
     // Handle the leaf case MAYBE MOVE THIS AFTER SORTING
     if (num_tris <= BVH_LEAF_SIZE) {
@@ -70,51 +166,13 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
         }
         return new BvhLeaf(min, max, num_tris, indices.data());
     }
-    // Compute the centroids of the triangles to decide on partitioning
-    std::vector<vec3<float>> centroids(end - start);
-    for (int i = start; i < end; i++) {
-        centroids[i - start] = (tris[i].vertices[0] + tris[i].vertices[1] + tris[i].vertices[2]) / 3.0f;
-    }
-
-    // Initialize indices
-    std::vector<int> indices(centroids.size());
-    for (int i = 0; i < indices.size(); ++i) {
-        indices[i] = i;  // Fill with 0, 1, 2, ..., N-1
-    }
-
-    // Print initial centroids
-    //for (int i = start; i < end; i++) {
-    //    std::cout << "Triangle Index: " << (i - start) << " Centroid: " << centroids[i - start].x << std::endl;
-    //}
-
-    // Sort indices based on the centroid values along the x-axis
-    std::sort(indices.begin(), indices.end(), [&centroids](int a, int b) {
-        return centroids[a].x < centroids[b].x;
-    });
-
-    // After sorting, update the triangles based on the sorted indices
-    std::vector<bvh::Triangle> sortedTris(end - start);
-    for (int i = 0; i < indices.size(); ++i) {
-        sortedTris[i] = tris[start + indices[i]];
-    }
-
-    // Copy the sorted triangles back to the original tris array
-    for (int i = 0; i < sortedTris.size(); ++i) {
-        tris[start + i] = sortedTris[i];
-    }
-
-    // Print the centroids after sorting to confirm
-    //for (int i = start; i < end; i++) {
-    //    std::cout << "Triangle Index: " << indices[i - start] << "Triangle Data" << tris[i-start].vertices->x << " Centroid: " << centroids[indices[i - start]].x << std::endl;
-    //}
-
 
     // Split the triangles in half
     int mid = start + num_tris / 2;
 
     // Recursively build the left and right child nodes
-    BvhNode* leftChild = precompute_bvh(tris, start, mid);
-    BvhNode* rightChild = precompute_bvh(tris, mid, end); // Use end here
+    BvhNode* leftChild = precompute_helper(tris, indices, start, mid);
+    BvhNode* rightChild = precompute_helper(tris, indices, mid, end); // Use end here
 
     // Create and return an internal node with the bounding box and child nodes
     BvhNode* node = new BvhNode(min, max);

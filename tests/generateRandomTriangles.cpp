@@ -16,10 +16,14 @@ namespace bvh{
             tri.vertices[j] = vec3<float>(dis(gen), dis(gen), dis(gen)); // Random vertex within the range
         }
         triangles.push_back(tri); // Add triangle to the list
-        //printf("Triangle %d: (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n",
-        //    i, tri.vertices[0].x, tri.vertices[0].y, tri.vertices[0].z,
-        //    tri.vertices[1].x, tri.vertices[1].y, tri.vertices[1].z,
-        //    tri.vertices[2].x, tri.vertices[2].y, tri.vertices[2].z);
+        printf("Triangle %d: (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n",
+            i, tri.vertices[0].x, tri.vertices[0].y, tri.vertices[0].z,
+            tri.vertices[1].x, tri.vertices[1].y, tri.vertices[1].z,
+            tri.vertices[2].x, tri.vertices[2].y, tri.vertices[2].z);
+        printf("Centroid: (%f, %f, %f)\n",
+            (tri.vertices[0].x + tri.vertices[1].x + tri.vertices[2].x) / 3.0f,
+            (tri.vertices[0].y + tri.vertices[1].y + tri.vertices[2].y) / 3.0f,
+            (tri.vertices[0].z + tri.vertices[1].z + tri.vertices[2].z) / 3.0f);
     }
         
     return triangles; // Return the list of triangles

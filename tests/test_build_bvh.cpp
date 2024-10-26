@@ -81,6 +81,40 @@ static bool check_bvh_integrity(BvhNode* node) {
     return check_bvh_integrity(node->left) && check_bvh_integrity(node->right);
 }
 
+// Helper function, only used in this file
+static int count_leaf_nodes(BvhNode* node) {
+    if (node == nullptr) {
+        return 0;
+    }
+
+    if (!node->left && !node->right) {
+        return 1;
+    }
+
+    if (!node->left || !node->right) {
+        std::cout << "one child is null, something went wrong" << std::endl;
+        return 0;
+    }
+
+    return count_leaf_nodes(node->left) + count_leaf_nodes(node->right);
+}
+
+static int count_expected_leaf_nodes(int numTriangles) {
+    int d = std::ceil(std::log2((numTriangles + BVH_LEAF_SIZE - 1) / BVH_LEAF_SIZE)); // depth of the binary tree
+    int leaves = std::pow(2, d);
+    // Unique case when precompute_bvh splits the triangles:
+    // if the number of triangles is divisible by 17 and results in 2^k for some k=0,1,2,...
+    // need to substract the expected leaf nodes by that 2^k
+    if (numTriangles % 17 == 0) {
+        int n = numTriangles / 17;
+        if (std::ceil(std::log2(n)) == std::floor(std::log2(n))) { // n is a power of 2
+            leaves -= n;
+        }
+    }
+    return leaves;
+}
+
+
 
 void build_bvh() {
     std::cout << "Starting build_bvh tests..." << std::endl;
@@ -127,6 +161,13 @@ void build_bvh() {
     // Test 1: bvh structure
     assert(bigroot!= nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot), "BVH structure is invalid");
+
+    int expected_total_leaf_nodes = count_expected_leaf_nodes(randTriangles1.size()) + count_expected_leaf_nodes(randTriangles2.size()) + count_expected_leaf_nodes(randTriangles3.size()) + count_expected_leaf_nodes(randTriangles4.size()) + count_expected_leaf_nodes(randTriangles5.size());
+    int actual_total_leaf_nodes = count_leaf_nodes(bigroot);
+    std::cout << "Total leaf nodes computed: " << actual_total_leaf_nodes << std::endl;
+    std::cout << "Expected: " << expected_total_leaf_nodes << std::endl;
+    assert(expected_total_leaf_nodes == actual_total_leaf_nodes, "Number of leaf nodes mismatch");
+
     std::cout << "Test Case 1 passed: BVH has proper structure" << std::endl;
     bigroot->print(0);
 
@@ -139,6 +180,12 @@ void build_bvh() {
     assert(bigroot2 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot2), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot2), "Bounding box mismatch");
+    bigroot2->print(0);
+    int expected_total_leaf_nodes2 = count_expected_leaf_nodes(randTriangles3.size()) + count_expected_leaf_nodes(randTriangles4.size());
+    int actual_total_leaf_nodes2 = count_leaf_nodes(bigroot2);
+    std::cout << "Total leaf nodes computed: " << actual_total_leaf_nodes2 << std::endl;
+    std::cout << "Expected: " << expected_total_leaf_nodes2 << std::endl;
+    assert(expected_total_leaf_nodes2 == actual_total_leaf_nodes2, "Number of leaf nodes mismatch");
     std::cout << "Test Case 3 passed: BVH for some objects in the provided list" << std::endl;
 
     // Test 4: create bvh from part of the objects
@@ -146,6 +193,11 @@ void build_bvh() {
     assert(bigroot3 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot3), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot3), "Bounding box mismatch");
+    int expected_total_leaf_nodes3 = count_expected_leaf_nodes(randTriangles4.size());
+    int actual_total_leaf_nodes3 = count_leaf_nodes(bigroot3);
+    std::cout << "Total leaf nodes computed: " << actual_total_leaf_nodes3 << std::endl;
+    std::cout << "Expected: " << expected_total_leaf_nodes3 << std::endl;
+    assert(expected_total_leaf_nodes3 == actual_total_leaf_nodes3, "Number of leaf nodes mismatch");
     std::cout << "Test Case 4 passed: BVH for one object in the provided list" << std::endl;
     bigroot3->print(0);
 
