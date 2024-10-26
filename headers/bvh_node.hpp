@@ -19,10 +19,11 @@ namespace bvh {
       virtual void print(int depth=0);
   };
 
-  class BvhLeaf : public BvhNode {
-    public:
-      int num_triangles;
-      int indices[BVH_LEAF_SIZE];
+  class BvhLeaf : public BvhNode // BvhLeaf inherits from BvhNode (special type of BvhNode)
+  {
+  public:
+    int num_triangles;
+    int indices[BVH_LEAF_SIZE];
 
       BvhLeaf();
       BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices);

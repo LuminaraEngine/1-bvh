@@ -13,14 +13,11 @@ BvhNode::BvhNode(vec3<float> min, vec3<float> max) : bounding_box(min, max) {
   this->right = nullptr;
 }
 
-BvhNode::~BvhNode() {
-  //std::cout << "Deleting BvhNode" << this <<  std::endl;
-  //std::cout << "Deleting left" << this->left <<  std::endl;
-  //std::cout << "Deleting right" << this->right <<  std::endl;
-  delete left;
-  delete right;
+BvhNode::~BvhNode()
+{
+  delete this->left;
+  delete this->right;
 }
-
 
 void BvhNode::print(int depth) {
     // Print the current node's bounding box
@@ -66,7 +63,8 @@ BvhLeaf::BvhLeaf() : BvhNode() {
 
 BvhLeaf::BvhLeaf(vec3<float> min, vec3<float> max, int num_triangles, int* indices) : BvhNode(min, max) {
   this->num_triangles = num_triangles;
-  for (int i = 0; i < num_triangles; i++) {
+  for (int i = 0; i < num_triangles; i++)
+  {
     this->indices[i] = indices[i];
   }
 }
