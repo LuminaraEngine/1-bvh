@@ -12,9 +12,11 @@
 
 // Add new tests here
 std::unordered_map<std::string, void (*)()> tests = {
-  {"load_bvh", bvh::tests::load_bvh},
   {"precompute_bvh", bvh::tests::precompute_bvh},
-  {"build_bvh", bvh::tests::build_bvh}
+  {"build_bvh", bvh::tests::build_bvh},
+  {"load_bvh_leaf", bvh::tests::load_bvh_leaf},
+  {"load_bvh_node", bvh::tests::load_bvh_node},
+  {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment}
 };
 
 
