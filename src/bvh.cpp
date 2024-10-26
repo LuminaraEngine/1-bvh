@@ -182,7 +182,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     return node;
 }
 
-BvhNode* build_bvh_recursion(std::vector<BvhNode*> bvhNodes, int num_objs, int start){
+BvhNode* build_bvh_recursion(std::vector<BvhNode*> &bvhNodes, int num_objs, int start){
     // Base case handling
     size_t bvhSize = num_objs;
 
