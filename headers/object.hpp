@@ -29,8 +29,6 @@ namespace bvh
     BvhNode* getBvh() const {
         return bvh;
     }
-
-    static Object* load(char* obj_filename, char* bvh_filename);
     
     ~Object();
     
@@ -41,5 +39,4 @@ namespace bvh
   // private:
   //   Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
   // };
-  };
 }

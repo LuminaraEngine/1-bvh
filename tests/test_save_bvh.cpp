@@ -8,6 +8,7 @@
 #include <bvh_node.hpp>
 #include <bvh.hpp>
 #include <custom_assert.hpp>
+#include <string.h>
 
 void save_bvh_test_base_case()
 {
@@ -126,7 +127,7 @@ void save_bvh_test_n_case()
     bvh::Object obj(position, rotation, scale, test_triangles, 3, root);
 
     // Save the BVH to a file
-    const char *bvh_filename = "./tests/test_save_bvh_n_case.bvh";
+    const char *bvh_filename = "./test_save_bvh_n_case.bvh";
     obj.save_bvh(const_cast<char *>(bvh_filename), root);
 }
 
@@ -176,5 +177,5 @@ void bvh::tests::save_bvh_test()
     // compare_bvh_files("test_save_bvh_base_case.bvh", "test_save_bvh_base_case_results.bvh");
 
     save_bvh_test_n_case();
-    compare_bvh_files("./tests/test_save_bvh_n_case.bvh", "./tests/test_save_bvh_n_case_results.bvh");
+    compare_bvh_files("./test_save_bvh_n_case.bvh", "../tests/data/final/test_save_bvh_n_case_results.bvh");
 }

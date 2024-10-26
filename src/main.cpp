@@ -16,12 +16,9 @@ std::unordered_map<std::string, void (*)()> tests = {
   {"build_bvh", bvh::tests::build_bvh},
   {"load_bvh_leaf", bvh::tests::load_bvh_leaf},
   {"load_bvh_node", bvh::tests::load_bvh_node},
-  {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment}
+  {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment},
+  {"save_bvh_test", bvh::tests::save_bvh_test}
 };
-
-std::unordered_map<std::string, void (*)()> tests = {
-    {"load_bvh", bvh::tests::load_bvh},
-    {"save_bvh_test", bvh::tests::save_bvh_test}};
 
 bool run_one_test(std::string test_name, void (*test_funct)())
 {
