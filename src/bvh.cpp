@@ -184,22 +184,22 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
 
 BvhNode* build_bvh_recursion(std::vector<BvhNode*> bvhNodes, int num_objs, int start){
     // Base case handling
-    size_t bvhSize = bvhNodes.size();
+    size_t bvhSize = num_objs;
 
     // Case when there's only one BVH node (no need for splitting)
     if (bvhSize == 1) {
-        std::cout << "Assigning node: " << bvhNodes[0] << std::endl;
-        return bvhNodes[0];  // Return the single BVH node directly
+        std::cout << "Assigning node: " << bvhNodes[start] << std::endl;
+        return bvhNodes[start];  // Return the single BVH node directly
     }
     // Case when there are two BVH nodes (direct assignment to left and right)
     else if (bvhSize == 2) {
         BoundingBox combinedBoundingBox = computeCombinedBoundingBox(bvhNodes);
         BvhNode* parentBvh = new BvhNode();
         parentBvh->bounding_box = combinedBoundingBox;
-        parentBvh->left = bvhNodes[0];
-        parentBvh->right = bvhNodes[1];
-        std::cout << "Assigning left: " << bvhNodes[0] << std::endl;
-        std::cout << "Assigning right: " << bvhNodes[1] << std::endl;
+        parentBvh->left = bvhNodes[start];
+        parentBvh->right = bvhNodes[start+1];
+        std::cout << "Assigning left: " << bvhNodes[start] << std::endl;
+        std::cout << "Assigning right: " << bvhNodes[start+1] << std::endl;
         return parentBvh;
     }
     // Case when there are more than two BVH nodes (recursive splitting)
