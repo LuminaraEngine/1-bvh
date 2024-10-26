@@ -223,7 +223,6 @@ Object::Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Tr
 Object::~Object()
 {
   delete[] triangles;
-  delete bvh;
 }
 
 void Object::build_bvh(char *obj_filename, char *bvh_filename)

@@ -1,6 +1,6 @@
 # Define the compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -mavx2 -I./headers/ -I./tests/ -fsanitize=address #-I../libs/include/ -L../libs/bin/
+CXXFLAGS = -Wall -Wextra -std=c++17 -mavx2 -I./headers/ -I./tests/ -fsanitize=address -g #-I../libs/include/ -L../libs/bin/
 
 # Define the output executable and directories
 TARGET = bvh

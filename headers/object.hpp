@@ -25,10 +25,21 @@ namespace bvh
 
     static Object *load(char *obj_filename, char *bvh_filename);
 
-    ~Object();
+    // Method to get the BVH
+    BvhNode* getBvh() const {
+        return bvh;
+    }
 
+    static Object* load(char* obj_filename, char* bvh_filename);
+    
+    ~Object();
+    
   public:
     Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode *bvh);
   };
 
+  // private:
+  //   Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode* bvh);
+  // };
+  };
 }
