@@ -1,7 +1,8 @@
 #include <ansi_colors.hpp>
 #include <custom_assert.hpp>
 #include <test_load_bvh.hpp>
-
+#include <test_precompute_bvh.hpp>
+#include <test_build_bvh.hpp>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -11,6 +12,8 @@
 
 // Add new tests here
 std::unordered_map<std::string, void (*)()> tests = {
+  {"precompute_bvh", bvh::tests::precompute_bvh},
+  {"build_bvh", bvh::tests::build_bvh},
   {"load_bvh_leaf", bvh::tests::load_bvh_leaf},
   {"load_bvh_node", bvh::tests::load_bvh_node},
   {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment}
@@ -63,7 +66,11 @@ void run_all_tests() {
   int num_tests = tests.size();
   int num_passed = 0;
 
+    std::cout << "Running all tests..." << std::endl;
+
+
   for (auto const& test : tests) {
+    std::cout << "Running test: " << test.first << std::endl; 
     if (run_one_test(test.first, test.second)) {
       num_passed++;
     }

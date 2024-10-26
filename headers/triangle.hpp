@@ -2,6 +2,7 @@
 
 #include <vec2.hpp>
 #include <vec3.hpp>
+#include <vector> // Include vector for std::vector
 
 namespace bvh {
 
@@ -11,5 +12,5 @@ namespace bvh {
     vec3<float> normals[3];     // Normal vectors
     bool smooth;                // Smooth shading
   } Triangle;
-
+  
 }
