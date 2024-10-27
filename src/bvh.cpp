@@ -182,89 +182,57 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     return node;
 }
 
-BvhNode* build_bvh_recursion(std::vector<BvhNode*> &bvhNodes, int num_objs, int start){
-    // Base case handling
-    size_t bvhSize = num_objs;
+BvhNode* build_bvh_recursion(std::vector<BvhNode*>& bvhNodes, int start, int end) {
+    size_t bvhSize = end - start;
 
-    // Case when there's only one BVH node (no need for splitting)
+    // Base case: only one BVH node
     if (bvhSize == 1) {
         std::cout << "Assigning node: " << bvhNodes[start] << std::endl;
-        return bvhNodes[start];  // Return the single BVH node directly
+        return bvhNodes[start];
     }
-    // Case when there are two BVH nodes (direct assignment to left and right)
+    // Case with exactly two BVH nodes
     else if (bvhSize == 2) {
-        BoundingBox combinedBoundingBox = computeCombinedBoundingBox(bvhNodes);
         BvhNode* parentBvh = new BvhNode();
-        parentBvh->bounding_box = combinedBoundingBox;
+        parentBvh->bounding_box = computeCombinedBoundingBox({bvhNodes[start], bvhNodes[start + 1]});
         parentBvh->left = bvhNodes[start];
-        parentBvh->right = bvhNodes[start+1];
-        std::cout << "Assigning left: " << bvhNodes[start] << std::endl;
-        std::cout << "Assigning right: " << bvhNodes[start+1] << std::endl;
+        parentBvh->right = bvhNodes[start + 1];
+        std::cout << "Assigning left: " << bvhNodes[start] << ", right: " << bvhNodes[start + 1] << std::endl;
         return parentBvh;
     }
-    // Case when there are more than two BVH nodes (recursive splitting)
-    else {
-        size_t midIndex = bvhSize / 2;  // Find the midpoint for splitting
-        // Recursively build the left and right BVHs
-        BvhNode* parentBvh = new BvhNode();
-        parentBvh->left = build_bvh_recursion(bvhNodes, num_objs - midIndex, start + midIndex);
-        parentBvh->right = build_bvh_recursion(bvhNodes, midIndex, start);  
-        std::cout << "Returning parent: " << parentBvh << std::endl;
-        return parentBvh;
-    }
+
+    // More than two nodes: recursively split
+    size_t midIndex = start + bvhSize / 2;
+    BvhNode* parentBvh = new BvhNode();
+    parentBvh->left = build_bvh_recursion(bvhNodes, start, midIndex);
+    parentBvh->right = build_bvh_recursion(bvhNodes, midIndex, end);
+
+    // Combine bounding boxes of the left and right child nodes
+    parentBvh->bounding_box = computeCombinedBoundingBox({parentBvh->left, parentBvh->right});
+    std::cout << "Returning parent: " << parentBvh << std::endl;
+    return parentBvh;
 }
 
 BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
     std::vector<BvhNode*> bvhNodes;
 
-    // Collect BVHs from each object starting from 'start'
+    // Collect BVH nodes from objects
     for (int i = start; i < start + num_objs; ++i) {
-        Object& obj = objs[i];
-        BvhNode* objBvh = obj.getBvh();
-        if (objBvh) {
+        if (BvhNode* objBvh = objs[i].getBvh()) {
             bvhNodes.push_back(objBvh);
         }
     }
 
-    // Check if we have any BVH nodes to combine
-    if (bvhNodes.empty()) {
-        return nullptr; // No BVH nodes to build from
-    }
-
-    // Sort the bounding boxes based on the chosen axis (e.g., min x-coordinate)
+    // Sort bounding boxes by the min x-coordinate
     std::sort(bvhNodes.begin(), bvhNodes.end(), [](BvhNode* a, BvhNode* b) {
-        return a->bounding_box.min.x < b->bounding_box.min.x; // Sort by min x-coordinate
+        return a->bounding_box.min.x < b->bounding_box.min.x;
     });
 
-    // Create the new parent BVH node
-    BvhNode* parentBvh = new BvhNode();
-    BoundingBox combinedBoundingBox = computeCombinedBoundingBox(bvhNodes);
-    parentBvh->bounding_box = combinedBoundingBox;
-
-    // Base case handling
-    size_t bvhSize = bvhNodes.size();
-
-    // Case when there's only one BVH node (no need for splitting)
-    if (bvhSize == 1) {
-        std::cout << "Assigning node: " << bvhNodes[0] << std::endl;
-        return bvhNodes[0];  // Return the single BVH node directly
+    // Start recursive BVH building
+    if (!bvhNodes.empty()) {
+        return build_bvh_recursion(bvhNodes, 0, bvhNodes.size());
+    } else {
+        return nullptr;
     }
-    // Case when there are two BVH nodes (direct assignment to left and right)
-    else if (bvhSize == 2) {
-        parentBvh->left = bvhNodes[0];
-        parentBvh->right = bvhNodes[1];
-        std::cout << "Assigning left: " << bvhNodes[0] << std::endl;
-        std::cout << "Assigning right: " << bvhNodes[1] << std::endl;
-    }
-    // Case when there are more than two BVH nodes (recursive splitting)
-    else {
-        size_t midIndex = bvhSize / 2;  // Find the midpoint for splitting
-
-        // Recursively build the left and right BVHs
-        parentBvh->left = build_bvh_recursion(bvhNodes, num_objs - midIndex, start + midIndex);
-        parentBvh->right = build_bvh_recursion(bvhNodes, midIndex, start); 
-    }
-    std::cout << "Returning parent: " << parentBvh << std::endl;
-    return parentBvh; // Return the new parent BVH node
 }
+
 }
