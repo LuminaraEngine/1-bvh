@@ -35,6 +35,8 @@ namespace bvh {
         return !(*this == other);
     }
 
+    float operator[](int index) const { return index == 0 ? x : (index == 1 ? y : z); }
+
     friend std::ostream& operator<<(std::ostream& os, const vec3<T>& vec) {
         os << "vec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;
