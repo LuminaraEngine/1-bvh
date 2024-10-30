@@ -4,6 +4,7 @@
 #include <test_save_bvh.hpp>
 #include <test_precompute_bvh.hpp>
 #include <test_build_bvh.hpp>
+#include <test_ray_tracing.hpp>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -17,7 +18,8 @@ std::unordered_map<std::string, void (*)()> tests = {
   {"load_bvh_leaf", bvh::tests::load_bvh_leaf},
   {"load_bvh_node", bvh::tests::load_bvh_node},
   {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment},
-  {"save_bvh_test", bvh::tests::save_bvh_test}
+  {"save_bvh_test", bvh::tests::save_bvh_test},
+  {"rt_classroom", bvh::tests::rt_classroom},
 };
 
 bool run_one_test(std::string test_name, void (*test_funct)())
