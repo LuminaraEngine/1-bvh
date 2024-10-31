@@ -67,6 +67,11 @@ namespace bvh {
         );
     }
 
+    // Static method to get the dot product of two vec3
+    static T dot(const vec3<T>& a, const vec3<T>& b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
     // Static method to get the cross product of two vec3
     static vec3<T> cross(const vec3<T>& a, const vec3<T>& b) {
         return vec3<T>(

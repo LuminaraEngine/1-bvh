@@ -130,7 +130,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     std::vector<vec3<float>> centroids(end - start);
     for (int i = start; i < end; i++) {
         centroids[i - start] = (tris[i].vertices[0] + tris[i].vertices[1] + tris[i].vertices[2]) / 3.0f;
-        std::cout << "Centroid: " << centroids[i - start] << "for triangle" << i << std::endl;
+        // std::cout << "Centroid: " << centroids[i - start] << "for triangle" << i << std::endl;
     }
 
     // Initialize indices
@@ -155,7 +155,7 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     // After sorting, update the triangles based on the sorted indices
     std::vector<bvh::Triangle> sortedTris(end - start);
     for (int i = 0; i < indices.size(); i++) {
-        std::cout << "Index: " << indices[i] << std::endl;
+        // std::cout << "Index: " << indices[i] << std::endl;
         sortedTris[i] = tris[start + indices[i]];
     }
 
