@@ -9,6 +9,29 @@
 #include <math.h>
 #include <chrono>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#define EPSILON 1e-6
+
+/**
+ * Helper function to compute the absolute value of an image
+ * 
+ * @param image The image to compute the absolute value of as a 1D array of vec3<float>
+ * @param width The width of the image
+ * @param height The height of the image
+ */
+void img_abs(bvh::vec3<float>* image, int width, int height) {
+  for(int y = 0; y < height; y++) {
+    for(int x = 0; x < width; x++) {
+      image[y * width + x].x = fabs(image[y * width + x].x);
+      image[y * width + x].y = fabs(image[y * width + x].y);
+      image[y * width + x].z = fabs(image[y * width + x].z);
+    }
+  }
+}
+
 /**
  * Helper function to clamp the values of an image between 0 and 1
  * 
@@ -114,8 +137,7 @@ bvh::vec3<float>* generate_eye_ray_directions(
  * 
  * @return The distance to the intersection point or +INF if there is no intersection
  */
-float intersect(bvh::vec3<float> ray_pos, bvh::vec3<float> ray_dir, const bvh::Triangle& triangle) {
-  const float EPSILON = 1e-6;
+float intersect_triangle(bvh::vec3<float> ray_pos, bvh::vec3<float> ray_dir, const bvh::Triangle& triangle) {
 
   // Define the triangle's edges
   bvh::vec3<float> edge1 = triangle.vertices[1] - triangle.vertices[0];
@@ -159,25 +181,151 @@ float intersect(bvh::vec3<float> ray_pos, bvh::vec3<float> ray_dir, const bvh::T
   }
 }
 
+/**
+ * Helper function to render a scene using the brute-force method
+ * 
+ * @param width The width of the image
+ * @param height The height of the image
+ * @param eye_origin The origin of the eye rays
+ * @param eye_directions The directions of the eye rays
+ * @param object The object to render
+ * @param output_filename The name of the file to save the image to
+ * @param hit_distances (output) The distances to the hit points
+ * @param hit_normals (output) The normals at the hit points
+ */
+void render_brute_force(
+  int width,
+  int height,
+  bvh::vec3<float> eye_origin,
+  const bvh::vec3<float>* eye_directions,
+  const bvh::Object& object,
+  const char* output_filename,
+  float** hit_distances,
+  bvh::vec3<float>** hit_normals
+) {
+  *hit_distances = new float[width * height];
+  std::fill_n(*hit_distances, width * height, std::numeric_limits<float>::infinity());
+  *hit_normals = new bvh::vec3<float>[width * height];
+
+  for(int i = 0; i < width * height; i++) {
+    for(int j = 0; j < object.num_triangles; j++) {
+      // Compute the intersection
+      float new_hit_distance = intersect_triangle(eye_origin, eye_directions[i], object.triangles[j]);
+
+      // Update the hit information
+      if (new_hit_distance < (*hit_distances)[i]) {
+        (*hit_distances)[i] = new_hit_distance;
+        (*hit_normals)[i] = object.triangles[j].normals[0];
+      }
+    }
+  }
+
+  clamp_zero_one(*hit_normals, width, height);
+  save_to_ppm(*hit_normals, width, height, output_filename);
+}
+
+/**
+ * Helper function to render a scene using a bvh
+ * 
+ * @param width The width of the image
+ * @param height The height of the image
+ * @param eye_origin The origin of the eye rays
+ * @param eye_directions The directions of the eye rays
+ * @param object The object to render
+ * @param output_filename The name of the file to save the image to
+ * @param hit_distances (output) The distances to the hit points
+ * @param hit_normals (output) The normals at the hit points
+ */
+void render_bvh(
+  int width,
+  int height,
+  bvh::vec3<float> eye_origin,
+  const bvh::vec3<float>* eye_directions,
+  const bvh::Object& object,
+  const char* output_filename,
+  float** hit_distances,
+  bvh::vec3<float>** hit_normals
+) {
+  *hit_distances = new float[width * height];
+  std::fill_n(*hit_distances, width * height, std::numeric_limits<float>::infinity());
+  *hit_normals = new bvh::vec3<float>[width * height];
+
+}
+
+void compare(
+  float* hit_distances_bf,
+  bvh::vec3<float>* hit_normals_bf,
+  float* hit_distances_bvh,
+  bvh::vec3<float>* hit_normals_bvh,
+  int width,
+  int height,
+  const char* hit_distances_filename,
+  const char* hit_normals_filename
+) {
+
+  // Hit distances
+  FILE* file_hit_distances = fopen(hit_distances_filename, "w");
+
+  fprintf(file_hit_distances, "P3\n%d %d\n1\n", width, height);
+
+  for(int y = 0; y < height; y++) {
+    for(int x = 0; x < width; x++) {
+      if (abs(hit_distances_bf[y * width + x] - hit_distances_bvh[y * width + x]) > EPSILON) {
+        fprintf(file_hit_distances, "1 0 0 ");  // red
+      } else {
+        fprintf(file_hit_distances, "0 1 0 ");  // green
+      }
+    }
+    fprintf(file_hit_distances, "\n");
+  }
+  fclose(file_hit_distances);
+
+  // Hit normals
+  bvh::vec3<float>* hit_normal_diff = new bvh::vec3<float>[width * height];
+
+  for(int i = 0; i < width * height; i++) {
+    hit_normal_diff[i] = bvh::vec3<float>::normalize(
+      bvh::vec3<float>(
+        abs(hit_normals_bf[i].x - hit_normals_bvh[i].x),
+        abs(hit_normals_bf[i].y - hit_normals_bvh[i].y),
+        abs(hit_normals_bf[i].z - hit_normals_bvh[i].z)
+      )
+    );
+  }
+
+  // img_abs(hit_normal_diff, width, height);
+  clamp_zero_one(hit_normal_diff, width, height);
+  save_to_ppm(hit_normal_diff, width, height, hit_normals_filename);
+
+}
+
 void bvh::tests::rt_classroom() {
 
-  char* CLASSROOM = "../tests/data/classroom.obj";
-  // char* CLASSROOM_BVH = "./classroom.bvh";
-  char* CLASSROOM_BVH = "../tests/data/node.bvh";
-  char* OUT_EYE_DIR = "./eye_ray_directions.ppm";
-  char* OUT_HIT_NORM = "./hit_normals.ppm";
+  char* CLASSROOM = "../tests/data/final/suzanne.obj";
+  char* CLASSROOM_BVH = "./suzanne.bvh";
+  char* RENDER_BF = "./suzanne_bf.ppm";
+  char* RENDER_BVH = "./suzanne_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./diff_hit_distances.ppm";
+  char* DIFF_HIT_NORMALS = "./diff_hit_normals.ppm";
 
-  const int WIDTH = 80;
-  const int HEIGHT = 60;
-  const float FOV = 90.0f;
-  const bvh::vec3<float> CAMERA_POS(0, 0, 0);
+  // char* CLASSROOM = "../tests/data/classroom.obj";
+  // char* CLASSROOM_BVH = "./classroom.bvh";
+  // char* RENDER_BF = "./classroom_bf.ppm";
+  // char* RENDER_BVH = "./classroom_bvh.ppm";
+  // char* DIFF_HIT_DISTANCES = "./diff_hit_distances.ppm";
+  // char* DIFF_HIT_NORMALS = "./diff_hit_normals.ppm";
+
+  const int WIDTH = 400;
+  const int HEIGHT = 300;
+  const float FOV = 60.0f;
+  const bvh::vec3<float> CAMERA_POS(0, 0, 3);
   const bvh::vec3<float> CAMERA_UP(0, 1, 0);
-  const bvh::vec3<float> CAMERA_DIR(0, 0, -1);
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
   
   // Precompute the bvh of the scene
-  // std::cout << "Building BVH" << std::endl;
-  // bvh::Object::build_bvh(CLASSROOM, CLASSROOM_BVH);
-  // std::cout << "BVH built" << std::endl;
+  std::cout << "Building BVH" << std::endl;
+  bvh::Object::build_bvh(CLASSROOM, CLASSROOM_BVH);
+  std::cout << "BVH built" << std::endl;
 
   // Load the scene
   std::cout << "Loading scene" << std::endl;
@@ -185,44 +333,36 @@ void bvh::tests::rt_classroom() {
   assert(classroom != nullptr, "Failed to load the scene");
   std::cout << "Scene loaded" << std::endl;
 
-  // Render the scene (brute-force)
-  std::cout << "Rendering scene" << std::endl;
-  std::cout << "Generating eye ray directions" << std::endl;
+  // Generate the eye ray directions
   bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
     WIDTH, HEIGHT, FOV, CAMERA_POS, CAMERA_UP, CAMERA_DIR
   );
-  std::cout << "Eye ray directions generated" << std::endl;
 
-  float* hit_distances = new float[WIDTH * HEIGHT];
-  for (int i = 0; i < WIDTH * HEIGHT; i++) {
-    hit_distances[i] = std::numeric_limits<float>::infinity();
-  }
-  bvh::vec3<float>* hit_normals = new bvh::vec3<float>[WIDTH * HEIGHT];
-
-  for(int i = 0; i < WIDTH * HEIGHT; i++) {
-    std::cout << "Processing pixel: (" << i % WIDTH << ", " << i / WIDTH << ")" << std::endl;
-    for(int j = 0; j < classroom->num_triangles; j++) {
-      // Compute the intersection
-      float new_hit_distance = intersect(CAMERA_POS, eye_ray_directions[i], classroom->triangles[j]);
-
-      // Update the hit information
-      if (new_hit_distance < hit_distances[i]) {
-        hit_distances[i] = new_hit_distance;
-        hit_normals[i] = classroom->triangles[j].normals[0];
-      }
-    }
-  }
-
-  clamp_zero_one(hit_normals, WIDTH, HEIGHT);
-  save_to_ppm(hit_normals, WIDTH, HEIGHT, OUT_HIT_NORM);
-
-  clamp_zero_one(eye_ray_directions, WIDTH, HEIGHT);
-  save_to_ppm(eye_ray_directions, WIDTH, HEIGHT, OUT_EYE_DIR);
-
-  delete[] eye_ray_directions;
-  delete[] hit_distances;
-  delete[] hit_normals;
+  // Render the scene (brute-force)
+  float* hit_distances_bf;
+  bvh::vec3<float>* hit_normals_bf;
+  std::cout << "Rendering scene (brute-force)" << std::endl;
+  render_brute_force(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *classroom, RENDER_BF, &hit_distances_bf, &hit_normals_bf);
+  std::cout << "Scene rendered" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BF << std::endl;
 
   // Render the scene (bvh)
+  float* hit_distances_bvh;
+  bvh::vec3<float>* hit_normals_bvh;
+  std::cout << "Rendering scene (bvh)" << std::endl;
+  render_bvh(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *classroom, RENDER_BVH, &hit_distances_bvh, &hit_normals_bvh);
+  std::cout << "Scene rendered" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BVH << std::endl;
+
+  // Compare the two images
+  compare(hit_distances_bf, hit_normals_bf, hit_distances_bvh, hit_normals_bvh, WIDTH, HEIGHT, DIFF_HIT_DISTANCES, DIFF_HIT_NORMALS);
+
+  // Cleanup
+  delete[] eye_ray_directions;
+  delete[] hit_distances_bf;
+  delete[] hit_normals_bf;
+  delete[] hit_distances_bvh;
+  delete[] hit_normals_bvh;
+  delete classroom;
 
 }
