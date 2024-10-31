@@ -183,71 +183,34 @@ BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
 }
 
 BvhNode* build_bvh_recursion(std::vector<BvhNode*>& bvhNodes, int start, int end) {
-    int bvhSize = end - start;
+    size_t bvhSize = end - start;
 
-    // Base cases
+    // Base case: only one BVH node
     if (bvhSize == 1) {
-        return bvhNodes[start]; // Single node, return it as-is
+        std::cout << "Assigning node: " << bvhNodes[start] << std::endl;
+        return bvhNodes[start];
     }
-    if (bvhSize == 2) {
-        BvhNode* parent = new BvhNode();
-        parent->left = bvhNodes[start];
-        parent->right = bvhNodes[start + 1];
-        parent->bounding_box = computeCombinedBoundingBox({parent->left, parent->right});
-        return parent;
-    }
-
-    // Initialize variables for best split
-    float bestCost = std::numeric_limits<float>::infinity();
-    int bestSplit = start + 1; // Default to the first possible split
-    int bestAxis = -1;
-
-    // Iterate over each axis (0: x, 1: y, 2: z)
-    for (int axis = 0; axis < 3; ++axis) {
-        // Sort nodes based on the current axis
-        std::sort(bvhNodes.begin() + start, bvhNodes.begin() + end,
-                  [axis](BvhNode* a, BvhNode* b) {
-                      return (axis == 0) ? (a->bounding_box.min.x < b->bounding_box.min.x) :
-                             (axis == 1) ? (a->bounding_box.min.y < b->bounding_box.min.y) :
-                                           (a->bounding_box.min.z < b->bounding_box.min.z);
-                  });
-
-        // Create bounding boxes for left and right splits
-        BoundingBox leftBox, rightBox;
-        for (int i = start; i < end; ++i) {
-            if (i > start) {
-                // Update left bounding box for the current node
-                leftBox = computeCombinedBoundingBox({bvhNodes[start], bvhNodes[i - 1]});
-            }
-
-            if (i < end) {
-                // Update right bounding box for the current node
-                rightBox = computeCombinedBoundingBox({bvhNodes[i], bvhNodes[end - 1]});
-            }
-
-            // Calculate SAH cost
-            float leftArea = leftBox.surfaceArea();
-            float rightArea = rightBox.surfaceArea();
-            float cost = leftArea * (i - start) + rightArea * (end - i);
-
-            // Check if this is the best cost found so far
-            if (cost < bestCost) {
-                bestCost = cost;
-                bestSplit = i; // Update best split point
-                bestAxis = axis; // Store the best axis (if needed)
-            }
-        }
+    // Case with exactly two BVH nodes
+    else if (bvhSize == 2) {
+        BvhNode* parentBvh = new BvhNode();
+        parentBvh->bounding_box = computeCombinedBoundingBox({bvhNodes[start], bvhNodes[start + 1]});
+        parentBvh->left = bvhNodes[start];
+        parentBvh->right = bvhNodes[start + 1];
+        std::cout << "Assigning left: " << bvhNodes[start] << ", right: " << bvhNodes[start + 1] << std::endl;
+        return parentBvh;
     }
 
-    // Create parent node with the best split found
-    BvhNode* parent = new BvhNode();
-    parent->left = build_bvh_recursion(bvhNodes, start, bestSplit);
-    parent->right = build_bvh_recursion(bvhNodes, bestSplit, end);
-    parent->bounding_box = computeCombinedBoundingBox({parent->left, parent->right});
+    // More than two nodes: recursively split
+    size_t midIndex = start + bvhSize / 2;
+    BvhNode* parentBvh = new BvhNode();
+    parentBvh->left = build_bvh_recursion(bvhNodes, start, midIndex);
+    parentBvh->right = build_bvh_recursion(bvhNodes, midIndex, end);
 
-    return parent;
+    // Combine bounding boxes of the left and right child nodes
+    parentBvh->bounding_box = computeCombinedBoundingBox({parentBvh->left, parentBvh->right});
+    std::cout << "Returning parent: " << parentBvh << std::endl;
+    return parentBvh;
 }
-
 
 BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
     std::vector<BvhNode*> bvhNodes;
@@ -271,6 +234,5 @@ BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
         return nullptr;
     }
 }
-
 
 }
