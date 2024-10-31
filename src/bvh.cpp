@@ -92,6 +92,7 @@ static BvhNode* precompute_helper(Triangle* tris, std::vector<int> index_list, i
     return node;
 }
 
+// TODO: optimize - sort using triangle bounds instead of centroids
 BvhNode* precompute_bvh(Triangle* tris, int start, int end) {
     int num_tris = end - start;
 
