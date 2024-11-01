@@ -78,7 +78,6 @@ void save_to_ppm(const bvh::vec3<float>* image, int width, int height, const cha
  * @param width The width of the image
  * @param height The height of the image
  * @param fov The vertical field of view of the camera (in degrees)
- * @param camera_pos The position of the camera
  * @param camera_up The up vector of the camera
  * @param camera_dir The direction vector of the camera (not the point it's looking at)
  * 
@@ -90,7 +89,6 @@ bvh::vec3<float>* generate_eye_ray_directions(
   int width,
   int height,
   float fov,
-  bvh::vec3<float> camera_pos,
   bvh::vec3<float> camera_up,
   bvh::vec3<float> camera_dir
 ) {
@@ -335,7 +333,7 @@ void bvh::tests::rt_classroom() {
 
   // Generate the eye ray directions
   bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
-    WIDTH, HEIGHT, FOV, CAMERA_POS, CAMERA_UP, CAMERA_DIR
+    WIDTH, HEIGHT, FOV, CAMERA_UP, CAMERA_DIR
   );
 
   // Render the scene (brute-force)
