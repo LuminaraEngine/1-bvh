@@ -338,10 +338,10 @@ void compare(
   for(int y = 0; y < height; y++) {
     for(int x = 0; x < width; x++) {
       if (abs(hit_distances_bf[y * width + x] - hit_distances_bvh[y * width + x]) > EPSILON) {
-        fprintf(file_hit_distances, "255 0 0 ");  // red
-        std::cout << "Difference in hit distances at (" << x << ", " << y << "): " << hit_distances_bf[y * width + x] << " vs " << hit_distances_bvh[y * width + x] << std::endl;
+        fprintf(file_hit_distances, "1 0 0 ");  // red
+        // std::cout << "Difference in hit distances at (" << x << ", " << y << "): " << hit_distances_bf[y * width + x] << " vs " << hit_distances_bvh[y * width + x] << std::endl;
       } else {
-        fprintf(file_hit_distances, "0 255 0 ");  // green
+        fprintf(file_hit_distances, "0 1 0 ");  // green
       }
     }
     fprintf(file_hit_distances, "\n");
