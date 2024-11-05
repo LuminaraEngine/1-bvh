@@ -19,6 +19,9 @@ std::unordered_map<std::string, void (*)()> tests = {
   {"load_bvh_node", bvh::tests::load_bvh_node},
   {"load_bvh_with_comment", bvh::tests::load_bvh_with_comment},
   {"save_bvh_test", bvh::tests::save_bvh_test},
+  {"rt_uv_sphere", bvh::tests::rt_uv_sphere},
+  {"rt_suzanne", bvh::tests::rt_suzanne},
+  {"rt_simple_room", bvh::tests::rt_simple_room},
   {"rt_classroom", bvh::tests::rt_classroom},
 };
 

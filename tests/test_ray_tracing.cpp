@@ -367,21 +367,14 @@ void compare(
 
 }
 
-void bvh::tests::rt_classroom() {
+void bvh::tests::rt_uv_sphere() {
 
-  char* CLASSROOM = "../tests/data/final/suzanne.obj";
-  char* CLASSROOM_BVH = "./suzanne.bvh";
-  char* RENDER_BF = "./suzanne_bf.ppm";
-  char* RENDER_BVH = "./suzanne_bvh.ppm";
-  char* DIFF_HIT_DISTANCES = "./diff_hit_distances.ppm";
-  char* DIFF_HIT_NORMALS = "./diff_hit_normals.ppm";
-
-  // char* CLASSROOM = "../tests/data/classroom.obj";
-  // char* CLASSROOM_BVH = "./classroom.bvh";
-  // char* RENDER_BF = "./classroom_bf.ppm";
-  // char* RENDER_BVH = "./classroom_bvh.ppm";
-  // char* DIFF_HIT_DISTANCES = "./diff_hit_distances.ppm";
-  // char* DIFF_HIT_NORMALS = "./diff_hit_normals.ppm";
+  char* OBJ = "../tests/data/final/uv_sphere.obj";
+  char* BVH = "./uv_sphere.bvh";
+  char* RENDER_BF = "./uv_sphere_bf.ppm";
+  char* RENDER_BVH = "./uv_sphere_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./uv_sphere_distances_diff.ppm";
+  char* DIFF_HIT_NORMALS = "./uv_sphere_normals_diff.ppm";
 
   const int WIDTH = 400;
   const int HEIGHT = 300;
@@ -389,15 +382,238 @@ void bvh::tests::rt_classroom() {
   const bvh::vec3<float> CAMERA_POS(0, 0, 3);
   const bvh::vec3<float> CAMERA_UP(0, 1, 0);
   const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
+
+  std::chrono::steady_clock::time_point begin;
+  std::chrono::steady_clock::time_point end;
+
+  // Precompute the bvh of the scene
+  std::cout << "Building BVH" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object::build_bvh(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  std::cout << "BVH built in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Load the scene
+  std::cout << "Loading scene" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object* uv_sphere = bvh::Object::load(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  assert(uv_sphere != nullptr, "Failed to load the scene");
+  std::cout << "Scene loaded in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Generate the eye ray directions
+  bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
+    WIDTH, HEIGHT, FOV, CAMERA_UP, CAMERA_DIR
+  );
+
+  // Render the scene (brute-force)
+  float* hit_distances_bf;
+  bvh::vec3<float>* hit_normals_bf;
+  std::cout << "Rendering scene (brute-force)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_brute_force(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *uv_sphere, RENDER_BF, &hit_distances_bf, &hit_normals_bf);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BF << std::endl;
+
+  // Render the scene (bvh)
+  float* hit_distances_bvh;
+  bvh::vec3<float>* hit_normals_bvh;
+  std::cout << "Rendering scene (bvh)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_bvh(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *uv_sphere, RENDER_BVH, &hit_distances_bvh, &hit_normals_bvh);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BVH << std::endl;
+
+  // Compare the two images
+  compare(hit_distances_bf, hit_normals_bf, hit_distances_bvh, hit_normals_bvh, WIDTH, HEIGHT, DIFF_HIT_DISTANCES, DIFF_HIT_NORMALS);
+
+  // Cleanup
+  delete[] eye_ray_directions;
+  delete[] hit_distances_bf;
+  delete[] hit_normals_bf;
+  delete[] hit_distances_bvh;
+  delete[] hit_normals_bvh;
+  delete uv_sphere;
+
+}
+
+void bvh::tests::rt_suzanne() {
+
+  char* OBJ = "../tests/data/final/suzanne.obj";
+  char* BVH = "./suzanne.bvh";
+  char* RENDER_BF = "./suzanne_bf.ppm";
+  char* RENDER_BVH = "./suzanne_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./suzanne_distances_diff.ppm";
+  char* DIFF_HIT_NORMALS = "./suzanne_normals_diff.ppm";
+
+  const int WIDTH = 400;
+  const int HEIGHT = 300;
+  const float FOV = 60.0f;
+  const bvh::vec3<float> CAMERA_POS(0, 0, 3);
+  const bvh::vec3<float> CAMERA_UP(0, 1, 0);
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
+
+  std::chrono::steady_clock::time_point begin;
+  std::chrono::steady_clock::time_point end;
+
+  // Precompute the bvh of the scene
+  std::cout << "Building BVH" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object::build_bvh(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  std::cout << "BVH built in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Load the scene
+  std::cout << "Loading scene" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object* suzanne = bvh::Object::load(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  assert(suzanne != nullptr, "Failed to load the scene");
+  std::cout << "Scene loaded in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Generate the eye ray directions
+  bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
+    WIDTH, HEIGHT, FOV, CAMERA_UP, CAMERA_DIR
+  );
+
+  // Render the scene (brute-force)
+  float* hit_distances_bf;
+  bvh::vec3<float>* hit_normals_bf;
+  std::cout << "Rendering scene (brute-force)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_brute_force(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *suzanne, RENDER_BF, &hit_distances_bf, &hit_normals_bf);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BF << std::endl;
+
+  // Render the scene (bvh)
+  float* hit_distances_bvh;
+  bvh::vec3<float>* hit_normals_bvh;
+  std::cout << "Rendering scene (bvh)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_bvh(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *suzanne, RENDER_BVH, &hit_distances_bvh, &hit_normals_bvh);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BVH << std::endl;
+
+  // Compare the two images
+  compare(hit_distances_bf, hit_normals_bf, hit_distances_bvh, hit_normals_bvh, WIDTH, HEIGHT, DIFF_HIT_DISTANCES, DIFF_HIT_NORMALS);
+
+  // Cleanup
+  delete[] eye_ray_directions;
+  delete[] hit_distances_bf;
+  delete[] hit_normals_bf;
+  delete[] hit_distances_bvh;
+  delete[] hit_normals_bvh;
+  delete suzanne;
+
+}
+
+void bvh::tests::rt_simple_room() {
+
+  char* OBJ = "../tests/data/final/simple_room.obj";
+  char* BVH = "./simple_room.bvh";
+  char* RENDER_BF = "./simple_room_bf.ppm";
+  char* RENDER_BVH = "./simple_room_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./simple_room_distances_diff.ppm";
+  char* DIFF_HIT_NORMALS = "./simple_room_normals_diff.ppm";
+
+  const int WIDTH = 400;
+  const int HEIGHT = 300;
+  const float FOV = 60.0f;
+  const bvh::vec3<float> CAMERA_POS(1.5f, 2.5f, 2);
+  const bvh::vec3<float> CAMERA_UP(0, 1, 0);
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(-0.7f, -0.9f, -1.0f));
+
+  std::chrono::steady_clock::time_point begin;
+  std::chrono::steady_clock::time_point end;
+
+  // Precompute the bvh of the scene
+  std::cout << "Building BVH" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object::build_bvh(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  std::cout << "BVH built in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Load the scene
+  std::cout << "Loading scene" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object* simple_room = bvh::Object::load(OBJ, BVH);
+  end = std::chrono::steady_clock::now();
+  assert(simple_room != nullptr, "Failed to load the scene");
+  std::cout << "Scene loaded in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Generate the eye ray directions
+  bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
+    WIDTH, HEIGHT, FOV, CAMERA_UP, CAMERA_DIR
+  );
+
+  // Render the scene (brute-force)
+  float* hit_distances_bf;
+  bvh::vec3<float>* hit_normals_bf;
+  std::cout << "Rendering scene (brute-force)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_brute_force(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *simple_room, RENDER_BF, &hit_distances_bf, &hit_normals_bf);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BF << std::endl;
+
+  // Render the scene (bvh)
+  float* hit_distances_bvh;
+  bvh::vec3<float>* hit_normals_bvh;
+  std::cout << "Rendering scene (bvh)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_bvh(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *simple_room, RENDER_BVH, &hit_distances_bvh, &hit_normals_bvh);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BVH << std::endl;
+
+  // Compare the two images
+  compare(hit_distances_bf, hit_normals_bf, hit_distances_bvh, hit_normals_bvh, WIDTH, HEIGHT, DIFF_HIT_DISTANCES, DIFF_HIT_NORMALS);
+
+  // Cleanup
+  delete[] eye_ray_directions;
+  delete[] hit_distances_bf;
+  delete[] hit_normals_bf;
+  delete[] hit_distances_bvh;
+  delete[] hit_normals_bvh;
+  delete simple_room;
+
+}
+
+void bvh::tests::rt_classroom() {
+
+  // char* OBJ = "../tests/data/final/suzanne.obj";
+  // char* BVH = "./suzanne.bvh";
+  // char* RENDER_BF = "./suzanne_bf.ppm";
+  // char* RENDER_BVH = "./suzanne_bvh.ppm";
+  // char* DIFF_HIT_DISTANCES = "./suzanne_distances_diff.ppm";
+  // char* DIFF_HIT_NORMALS = "./suzanne_normals_diff.ppm";
+
+  char* OBJ = "../tests/data/classroom.obj";
+  char* BVH = "./classroom.bvh";
+  char* RENDER_BF = "./classroom_bf.ppm";
+  char* RENDER_BVH = "./classroom_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./classroom_distances_diff.ppm";
+  char* DIFF_HIT_NORMALS = "./classroom_normals_diff.ppm";
+
+  const int WIDTH = 80;
+  const int HEIGHT = 60;
+  const float FOV = 60.0f;
+  const bvh::vec3<float> CAMERA_POS(0, 0, 3);
+  const bvh::vec3<float> CAMERA_UP(0, 1, 0);
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
   
   // Precompute the bvh of the scene
   std::cout << "Building BVH" << std::endl;
-  bvh::Object::build_bvh(CLASSROOM, CLASSROOM_BVH);
+  bvh::Object::build_bvh(OBJ, BVH);
   std::cout << "BVH built" << std::endl;
 
   // Load the scene
   std::cout << "Loading scene" << std::endl;
-  bvh::Object* classroom = bvh::Object::load(CLASSROOM, CLASSROOM_BVH);
+  bvh::Object* classroom = bvh::Object::load(OBJ, BVH);
   assert(classroom != nullptr, "Failed to load the scene");
   std::cout << "Scene loaded" << std::endl;
 
