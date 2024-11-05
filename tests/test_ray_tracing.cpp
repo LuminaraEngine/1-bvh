@@ -222,6 +222,64 @@ void render_brute_force(
   save_to_ppm(*hit_normals, width, height, output_filename);
 }
 
+// Helper structure for intersect_bvh to return the intersection distance and triangle index
+struct IntersectBvhResult {
+  float distance;
+  int triangle_index;
+
+  // Default constructor with infinite distance and -1 triangle index
+  IntersectBvhResult() : distance(std::numeric_limits<float>::infinity()), triangle_index(-1) {}
+};
+
+/**
+ * Helper function to compute the intersection between a ray and the closest triangle by traversing the BVH
+ * 
+ * @param ray_pos The position of the ray
+ * @param ray_dir The direction of the ray
+ * @param node The current node of the BVH
+ * @param triangle_list The list of triangles of the object
+ * 
+ * @return The distance to the intersection point and the index of the intersected triangle
+ */
+IntersectBvhResult intersect_bvh(bvh::vec3<float> ray_pos, bvh::vec3<float> ray_dir, const bvh::BvhNode* node, bvh::Triangle* triangle_list) {
+  IntersectBvhResult result;
+  // slab test
+  bvh::vec3<float> box_min = node->bounding_box.min;
+  bvh::vec3<float> box_max = node->bounding_box.max;
+  float tx1 = (box_min.x - ray_pos.x) / ray_dir.x, tx2 = (box_max.x - ray_pos.x) / ray_dir.x;
+  float ty1 = (box_min.y - ray_pos.y) / ray_dir.y, ty2 = (box_max.y - ray_pos.y) / ray_dir.y;
+  float tz1 = (box_min.z - ray_pos.z) / ray_dir.z, tz2 = (box_max.z - ray_pos.z) / ray_dir.z;
+
+  float tmin = fmaxf(fmaxf(fminf(tx1, tx2), fminf(ty1, ty2)), fminf(tz1, tz2));
+  float tmax = fminf(fminf(fmaxf(tx1, tx2), fmaxf(ty1, ty2)), fmaxf(tz1, tz2));
+  bool ray_intersects_box = (tmax >= tmin && tmax >= 0);
+
+  if (ray_intersects_box) {
+    if (node->left == nullptr && node->right == nullptr) { // leaf node
+      bvh::BvhLeaf* leaf = (bvh::BvhLeaf*)node;
+
+      for (int i = 0; i < leaf->num_triangles; i++) {
+        float new_hit_distance = intersect_triangle(ray_pos, ray_dir, triangle_list[leaf->indices[i]]);
+        if (new_hit_distance < result.distance) {
+          result.distance = new_hit_distance;
+          result.triangle_index = leaf->indices[i];
+        }
+      }
+    } else { // recursion to children nodes
+      IntersectBvhResult left_result = intersect_bvh(ray_pos, ray_dir, node->left, triangle_list);
+      IntersectBvhResult right_result = intersect_bvh(ray_pos, ray_dir, node->right, triangle_list);
+      
+      if (left_result.distance < right_result.distance) {
+        return left_result;
+      } else {
+        return right_result;
+      }
+    }
+  }
+
+  return result;
+}
+
 /**
  * Helper function to render a scene using a bvh
  * 
@@ -248,6 +306,17 @@ void render_bvh(
   std::fill_n(*hit_distances, width * height, std::numeric_limits<float>::infinity());
   *hit_normals = new bvh::vec3<float>[width * height];
 
+  // TODO traverse the bvh and compute the intersections
+  for (int i = 0; i < width * height; i++) {
+    IntersectBvhResult result = intersect_bvh(eye_origin, eye_directions[i], object.getBvh(), object.triangles);
+    (*hit_distances)[i] = result.distance;
+    if (result.triangle_index > -1) {
+      (*hit_normals)[i] = object.triangles[result.triangle_index].normals[0];
+    }
+  }
+
+  clamp_zero_one(*hit_normals, width, height);
+  save_to_ppm(*hit_normals, width, height, output_filename);
 }
 
 void compare(
@@ -270,6 +339,7 @@ void compare(
     for(int x = 0; x < width; x++) {
       if (abs(hit_distances_bf[y * width + x] - hit_distances_bvh[y * width + x]) > EPSILON) {
         fprintf(file_hit_distances, "1 0 0 ");  // red
+        // std::cout << "Difference in hit distances at (" << x << ", " << y << "): " << hit_distances_bf[y * width + x] << " vs " << hit_distances_bvh[y * width + x] << std::endl;
       } else {
         fprintf(file_hit_distances, "0 1 0 ");  // green
       }

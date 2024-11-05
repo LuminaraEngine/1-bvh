@@ -158,7 +158,7 @@ BvhNode *parse_bvh_file(char *bvh_filename)
     if (line[0] == 'n')
     {
       sscanf(line, "n %f %f %f %f %f %f", &min.x, &min.y, &min.z, &max.x, &max.y, &max.z);
-      nodes[nodes_index] = BvhNode(min, max);
+      nodes[nodes_index++] = BvhNode(min, max);
     }
     else if (line[0] == 'l')
     {
