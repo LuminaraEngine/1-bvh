@@ -156,7 +156,9 @@ void build_bvh() {
 
     std::cout << "Calling build_bvh_from_objects..." << std::endl;
 
-    BvhNode* bigroot = build_bvh_from_objects(objects, 5, 0);
+    Triangle* new_triangles_list = nullptr;
+
+    BvhNode* bigroot = build_bvh_from_objects(objects, 5, 0, &new_triangles_list);
 
     // Test 1: bvh structure
     assert(bigroot!= nullptr, "Root BVH should not be null.");
@@ -176,7 +178,7 @@ void build_bvh() {
     std::cout << "Test Case 2 passed: Bounding box matches expected values for all nodes." << std::endl;
 
     // Test 3: create bvh from part of the objects
-    BvhNode* bigroot2 = build_bvh_from_objects(objects, 2, 2);
+    BvhNode* bigroot2 = build_bvh_from_objects(objects, 2, 2, &new_triangles_list);
     assert(bigroot2 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot2), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot2), "Bounding box mismatch");
@@ -189,7 +191,7 @@ void build_bvh() {
     std::cout << "Test Case 3 passed: BVH for some objects in the provided list" << std::endl;
 
     // Test 4: create bvh from part of the objects
-    BvhNode* bigroot3 = build_bvh_from_objects(objects, 1, 3);
+    BvhNode* bigroot3 = build_bvh_from_objects(objects, 1, 3, &new_triangles_list);
     assert(bigroot3 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot3), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot3), "Bounding box mismatch");

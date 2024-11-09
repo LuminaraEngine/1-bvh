@@ -10,6 +10,7 @@ namespace bvh {
    * @param tris The list of triangles
    * @param start The start index of the list
    * @param end The end index of the list (excluded)
+   * @return The root node of the BVH
    */
   BvhNode *precompute_bvh(Triangle* tris, int start, int end);
 
@@ -18,8 +19,10 @@ namespace bvh {
    * @param objs The list of objects
    * @param num_objs The number of objects
    * @param start The start index of the list of objects
+   * @param new_triangles_list (OUTPUT) The list of triangles that will contain all the triangles of the objects
+   * @return The root node of the BVH
    */
-  BvhNode *build_bvh_from_objects(Object *objs, int num_objs, int start);
+  BvhNode *build_bvh_from_objects(Object *objs, int num_objs, int start, Triangle** new_triangles_list);
   BoundingBox computeCombinedBoundingBox(const std::vector<BvhNode*>& bvhNodes);
 
 }

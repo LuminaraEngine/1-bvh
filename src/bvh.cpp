@@ -213,24 +213,50 @@ BvhNode* build_bvh_recursion(std::vector<BvhNode*>& bvhNodes, int start, int end
     return parentBvh;
 }
 
-BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start) {
-    std::vector<BvhNode*> bvhNodes;
-
-    // Collect BVH nodes from objects
-    for (int i = start; i < start + num_objs; ++i) {
-        if (BvhNode* objBvh = objs[i].getBvh()) {
-            bvhNodes.push_back(objBvh);
+void update_leaf_indices(BvhNode* node, int new_list_start) {
+    BvhLeaf* leaf = dynamic_cast<BvhLeaf*>(node);
+    if (leaf != nullptr) {
+        for (int i = 0; i < leaf->num_triangles; ++i) {
+            leaf->indices[i] += new_list_start;
         }
+    } else if (node->left != nullptr && node->right != nullptr) {
+        update_leaf_indices(node->left, new_list_start);
+        update_leaf_indices(node->right, new_list_start);
+    } else {
+        std::cerr << "Panic" << std::endl;
+    }
+}
+
+BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start, Triangle** new_triangles_list) {
+    // Collect all triangles from the objects
+    int total_num_triangles = 0;
+    for (int i = start; i < start + num_objs; ++i) {
+        total_num_triangles += objs[i].num_triangles;
+    }
+    *new_triangles_list = new Triangle[total_num_triangles];
+
+    // Copy triangles to the new list and update the leaf indices
+    int current_triangle_index = 0;
+    std::vector<BvhNode*> bvh_list;
+
+    for (int i = start; i < start + num_objs; ++i) {
+        for (int j = 0; j < objs[i].num_triangles; ++j) {
+            (*new_triangles_list)[current_triangle_index++] = objs[i].triangles[j];
+        }
+        // FIXME: create a deep copy of each object's BVH and update the copy's leaf indices
+        //       and push that to the bvh_list
+        update_leaf_indices(objs[i].bvh, current_triangle_index - objs[i].num_triangles);
+        bvh_list.push_back(objs[i].bvh);
     }
 
     // Sort bounding boxes by the min x-coordinate
-    std::sort(bvhNodes.begin(), bvhNodes.end(), [](BvhNode* a, BvhNode* b) {
+    std::sort(bvh_list.begin(), bvh_list.end(), [](BvhNode* a, BvhNode* b) {
         return a->bounding_box.min.x < b->bounding_box.min.x;
     });
 
     // Start recursive BVH building
-    if (!bvhNodes.empty()) {
-        return build_bvh_recursion(bvhNodes, 0, bvhNodes.size());
+    if (!bvh_list.empty()) {
+        return build_bvh_recursion(bvh_list, 0, bvh_list.size());
     } else {
         return nullptr;
     }
