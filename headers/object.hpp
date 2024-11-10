@@ -19,10 +19,13 @@ namespace bvh
 
     BvhNode *bvh; // Pointer to the root node of the object's BVH
 
+    // Builds the BVH tree from the obj file and saves it to a bvh file
     static void build_bvh(char *obj_filename, char *bvh_filename);
 
+    // Saves the BVH structure to a file
     static void save_bvh(char *bvh_filename, BvhNode *bvh);
 
+    // Loads the Object given the obj and bvh files
     static Object *load(char *obj_filename, char *bvh_filename);
     
     ~Object();
