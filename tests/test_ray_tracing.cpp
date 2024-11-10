@@ -659,6 +659,9 @@ void bvh::tests::rt_sphere_and_room() {
   char* OBJ_room = "../tests/data/final/suzanne.obj";
   char* BVH_room = "./suzanne.bvh";
 
+  char* OBJ_suzanne = "../tests/data/final/simple_room.obj";
+  char* BVH_suzanne = "./simple_room.bvh";
+
   char* RENDER_BF = "./sphere_and_room_bf.ppm";
   char* RENDER_BVH = "./sphere_and_room_bvh.ppm";
   char* DIFF_HIT_DISTANCES = "./sphere_and_room_distances_diff.ppm";
@@ -679,6 +682,7 @@ void bvh::tests::rt_sphere_and_room() {
   begin = std::chrono::steady_clock::now();
   bvh::Object::build_bvh(OBJ_sphere, BVH_sphere);
   bvh::Object::build_bvh(OBJ_room, BVH_room);
+  bvh::Object::build_bvh(OBJ_suzanne, BVH_suzanne);
   end = std::chrono::steady_clock::now();
   std::cout << "BVHs built in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
 
@@ -687,9 +691,11 @@ void bvh::tests::rt_sphere_and_room() {
   begin = std::chrono::steady_clock::now();
   bvh::Object* uv_sphere = bvh::Object::load(OBJ_sphere, BVH_sphere);
   bvh::Object* simple_room = bvh::Object::load(OBJ_room, BVH_room);
+  bvh::Object* suzanne = bvh::Object::load(OBJ_suzanne, BVH_suzanne);
   end = std::chrono::steady_clock::now();
   assert(uv_sphere != nullptr, "Failed to load the sphere");
   assert(simple_room != nullptr, "Failed to load the room");
+  assert(suzanne != nullptr, "Failed to load the suzanne");
   std::cout << "Sphere and room loaded in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
 
   // Generate the eye ray directions
@@ -698,13 +704,15 @@ void bvh::tests::rt_sphere_and_room() {
   );
 
   // Combine the two bvh
-  bvh::Object objects[] = {*uv_sphere, *simple_room};
+  bvh::Object objects[] = {*uv_sphere, *simple_room, *suzanne};
+  int num_objects = 3;
+  int expected_num_triangles = uv_sphere->num_triangles + simple_room->num_triangles + suzanne->num_triangles;
   Triangle* all_triangles = nullptr;
   int total_num_triangles;
-  BvhNode* combined_bvh = build_bvh_from_objects(objects, 2, 0, &all_triangles, &total_num_triangles);
+  BvhNode* combined_bvh = build_bvh_from_objects(objects, num_objects, 0, &all_triangles, &total_num_triangles);
   assert(combined_bvh != nullptr, "Failed to build the combined bvh");
   assert(all_triangles != nullptr, "Failed to build the combined bvh");
-  assert(total_num_triangles == uv_sphere->num_triangles + simple_room->num_triangles, "Incorrect number of triangles in the combined bvh");
+  assert(total_num_triangles == expected_num_triangles, "Incorrect number of triangles in the combined bvh");
 
   // Create a combined object to simplify the process of calling render_brute_force and render_bvh
   Object* combined_obj = new Object(bvh::vec3<float>(0, 0, 0), bvh::vec3<float>(0, 0, 0), bvh::vec3<float>(1, 1, 1), all_triangles, total_num_triangles, combined_bvh);
