@@ -40,6 +40,17 @@ void BvhNode::print(int depth) {
     }
 }
 
+BvhNode* BvhNode::clone() const {
+    BvhNode* new_node = new BvhNode(*this);
+    if (this->left) {
+        new_node->left = this->left->clone();
+    }
+    if (this->right) {
+        new_node->right = this->right->clone();
+    }
+    return new_node;
+}
+
 // void BvhNode::deleteBvh() {
 //     if (this == nullptr) return;
 
@@ -83,4 +94,8 @@ void BvhLeaf::print(int depth=0) {
     printf("%i ", this->indices[i]);
   }
   printf("\n");
+}
+
+BvhNode* BvhLeaf::clone() const {
+  return new BvhLeaf(*this);
 }

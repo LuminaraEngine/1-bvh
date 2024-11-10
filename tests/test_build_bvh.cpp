@@ -157,12 +157,13 @@ void build_bvh() {
     std::cout << "Calling build_bvh_from_objects..." << std::endl;
 
     Triangle* new_triangles_list = nullptr;
-
-    BvhNode* bigroot = build_bvh_from_objects(objects, 5, 0, &new_triangles_list);
+    int total_num_triangles = 0;
+    BvhNode* bigroot = build_bvh_from_objects(objects, 5, 0, &new_triangles_list, &total_num_triangles);
 
     // Test 1: bvh structure
     assert(bigroot!= nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot), "BVH structure is invalid");
+    assert(total_num_triangles == randTriangles1.size() + randTriangles2.size() + randTriangles3.size() + randTriangles4.size() + randTriangles5.size(), "Total number of triangles mismatch");
 
     int expected_total_leaf_nodes = count_expected_leaf_nodes(randTriangles1.size()) + count_expected_leaf_nodes(randTriangles2.size()) + count_expected_leaf_nodes(randTriangles3.size()) + count_expected_leaf_nodes(randTriangles4.size()) + count_expected_leaf_nodes(randTriangles5.size());
     int actual_total_leaf_nodes = count_leaf_nodes(bigroot);
@@ -178,7 +179,7 @@ void build_bvh() {
     std::cout << "Test Case 2 passed: Bounding box matches expected values for all nodes." << std::endl;
 
     // Test 3: create bvh from part of the objects
-    BvhNode* bigroot2 = build_bvh_from_objects(objects, 2, 2, &new_triangles_list);
+    BvhNode* bigroot2 = build_bvh_from_objects(objects, 2, 2, &new_triangles_list, &total_num_triangles);
     assert(bigroot2 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot2), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot2), "Bounding box mismatch");
@@ -191,7 +192,7 @@ void build_bvh() {
     std::cout << "Test Case 3 passed: BVH for some objects in the provided list" << std::endl;
 
     // Test 4: create bvh from part of the objects
-    BvhNode* bigroot3 = build_bvh_from_objects(objects, 1, 3, &new_triangles_list);
+    BvhNode* bigroot3 = build_bvh_from_objects(objects, 1, 3, &new_triangles_list, &total_num_triangles);
     assert(bigroot3 != nullptr, "Root BVH should not be null.");
     assert(check_bvh_integrity(bigroot3), "BVH structure is invalid");
     assert(check_all_bounding_box(bigroot3), "Bounding box mismatch");

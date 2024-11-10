@@ -6,5 +6,5 @@ namespace bvh::tests {
   void rt_suzanne();
   void rt_simple_room();
   void rt_classroom();
-
+  void rt_sphere_and_room();
 }

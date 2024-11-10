@@ -227,13 +227,18 @@ void update_leaf_indices(BvhNode* node, int new_list_start) {
     }
 }
 
-BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start, Triangle** new_triangles_list) {
-    // Collect all triangles from the objects
-    int total_num_triangles = 0;
+BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start, Triangle** new_triangles_list, int* total_num_triangles) {
+    // Count the total number of triangles
+    *total_num_triangles = 0;
     for (int i = start; i < start + num_objs; ++i) {
-        total_num_triangles += objs[i].num_triangles;
+        *total_num_triangles += objs[i].num_triangles;
     }
-    *new_triangles_list = new Triangle[total_num_triangles];
+    
+    // Allocate memory for the new list of triangles
+    if (*new_triangles_list != nullptr) {
+        delete[] *new_triangles_list;
+    }
+    *new_triangles_list = new Triangle[*total_num_triangles];
 
     // Copy triangles to the new list and update the leaf indices
     int current_triangle_index = 0;
@@ -243,10 +248,10 @@ BvhNode* build_bvh_from_objects(Object* objs, int num_objs, int start, Triangle*
         for (int j = 0; j < objs[i].num_triangles; ++j) {
             (*new_triangles_list)[current_triangle_index++] = objs[i].triangles[j];
         }
-        // FIXME: create a deep copy of each object's BVH and update the copy's leaf indices
-        //       and push that to the bvh_list
-        update_leaf_indices(objs[i].bvh, current_triangle_index - objs[i].num_triangles);
-        bvh_list.push_back(objs[i].bvh);
+        // Copy the BVH and update the leaf indices on the copy
+        BvhNode *bvh_copy = objs[i].bvh->clone();
+        update_leaf_indices(bvh_copy, current_triangle_index - objs[i].num_triangles);
+        bvh_list.push_back(bvh_copy);
     }
 
     // Sort bounding boxes by the min x-coordinate

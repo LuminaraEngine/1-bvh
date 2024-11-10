@@ -23,6 +23,7 @@ std::unordered_map<std::string, void (*)()> tests = {
   {"rt_suzanne", bvh::tests::rt_suzanne},
   {"rt_simple_room", bvh::tests::rt_simple_room},
   {"rt_classroom", bvh::tests::rt_classroom},
+  {"rt_sphere_and_room", bvh::tests::rt_sphere_and_room}
 };
 
 bool run_one_test(std::string test_name, void (*test_funct)())

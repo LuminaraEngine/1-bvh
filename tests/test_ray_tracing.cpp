@@ -12,6 +12,7 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#include <bvh.hpp>
 
 #define EPSILON 1e-6
 
@@ -308,7 +309,7 @@ void render_bvh(
 
   // TODO traverse the bvh and compute the intersections
   for (int i = 0; i < width * height; i++) {
-    IntersectBvhResult result = intersect_bvh(eye_origin, eye_directions[i], object.getBvh(), object.triangles);
+    IntersectBvhResult result = intersect_bvh(eye_origin, eye_directions[i], object.bvh, object.triangles);
     (*hit_distances)[i] = result.distance;
     if (result.triangle_index > -1) {
       (*hit_normals)[i] = object.triangles[result.triangle_index].normals[0];
@@ -649,4 +650,93 @@ void bvh::tests::rt_classroom() {
   delete[] hit_normals_bvh;
   delete classroom;
 
+}
+
+void bvh::tests::rt_sphere_and_room() {
+  char* OBJ_sphere = "../tests/data/final/uv_sphere.obj";
+  char* BVH_sphere = "./uv_sphere.bvh";
+
+  char* OBJ_room = "../tests/data/final/suzanne.obj";
+  char* BVH_room = "./suzanne.bvh";
+
+  char* RENDER_BF = "./sphere_and_room_bf.ppm";
+  char* RENDER_BVH = "./sphere_and_room_bvh.ppm";
+  char* DIFF_HIT_DISTANCES = "./sphere_and_room_distances_diff.ppm";
+  char* DIFF_HIT_NORMALS = "./sphere_and_room_normals_diff.ppm";
+
+  const int WIDTH = 400;
+  const int HEIGHT = 300;
+  const float FOV = 60.0f;
+  const bvh::vec3<float> CAMERA_POS(0, 0, 3);
+  const bvh::vec3<float> CAMERA_UP(0, 1, 0);
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
+
+  std::chrono::steady_clock::time_point begin;
+  std::chrono::steady_clock::time_point end;
+
+  // Precompute the two bvh
+  std::cout << "Building BVH for sphere and room" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object::build_bvh(OBJ_sphere, BVH_sphere);
+  bvh::Object::build_bvh(OBJ_room, BVH_room);
+  end = std::chrono::steady_clock::now();
+  std::cout << "BVHs built in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Load the two scenes
+  std::cout << "Loading sphere and room" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  bvh::Object* uv_sphere = bvh::Object::load(OBJ_sphere, BVH_sphere);
+  bvh::Object* simple_room = bvh::Object::load(OBJ_room, BVH_room);
+  end = std::chrono::steady_clock::now();
+  assert(uv_sphere != nullptr, "Failed to load the sphere");
+  assert(simple_room != nullptr, "Failed to load the room");
+  std::cout << "Sphere and room loaded in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+
+  // Generate the eye ray directions
+  bvh::vec3<float>* eye_ray_directions = generate_eye_ray_directions(
+    WIDTH, HEIGHT, FOV, CAMERA_UP, CAMERA_DIR
+  );
+
+  // Combine the two bvh
+  bvh::Object objects[] = {*uv_sphere, *simple_room};
+  Triangle* all_triangles = nullptr;
+  int total_num_triangles;
+  BvhNode* combined_bvh = build_bvh_from_objects(objects, 2, 0, &all_triangles, &total_num_triangles);
+  assert(combined_bvh != nullptr, "Failed to build the combined bvh");
+  assert(all_triangles != nullptr, "Failed to build the combined bvh");
+  assert(total_num_triangles == uv_sphere->num_triangles + simple_room->num_triangles, "Incorrect number of triangles in the combined bvh");
+
+  // Create a combined object to simplify the process of calling render_brute_force and render_bvh
+  Object* combined_obj = new Object(bvh::vec3<float>(0, 0, 0), bvh::vec3<float>(0, 0, 0), bvh::vec3<float>(1, 1, 1), all_triangles, total_num_triangles, combined_bvh);
+
+  // Render the scene (brute-force)
+  float* hit_distances_bf;
+  bvh::vec3<float>* hit_normals_bf;
+  std::cout << "Rendering scene (brute-force)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_brute_force(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *combined_obj, RENDER_BF, &hit_distances_bf, &hit_normals_bf);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BF << std::endl;
+
+  // Render the scene (bvh)
+  float* hit_distances_bvh;
+  bvh::vec3<float>* hit_normals_bvh;
+  std::cout << "Rendering scene (bvh)" << std::endl;
+  begin = std::chrono::steady_clock::now();
+  render_bvh(WIDTH, HEIGHT, CAMERA_POS, eye_ray_directions, *combined_obj, RENDER_BVH, &hit_distances_bvh, &hit_normals_bvh);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Scene rendered in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "Hit normals saved to " << RENDER_BVH << std::endl;
+
+  // Compare the two images
+  compare(hit_distances_bf, hit_normals_bf, hit_distances_bvh, hit_normals_bvh, WIDTH, HEIGHT, DIFF_HIT_DISTANCES, DIFF_HIT_NORMALS);
+
+  // Cleanup
+  delete[] eye_ray_directions;
+  delete[] hit_distances_bf;
+  delete[] hit_normals_bf;
+  delete[] hit_distances_bvh;
+  delete[] hit_normals_bvh;
+  delete combined_obj;
 }

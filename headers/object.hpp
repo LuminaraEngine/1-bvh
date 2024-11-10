@@ -24,15 +24,9 @@ namespace bvh
     static void save_bvh(char *bvh_filename, BvhNode *bvh);
 
     static Object *load(char *obj_filename, char *bvh_filename);
-
-    // Method to get the BVH
-    BvhNode* getBvh() const {
-        return bvh;
-    }
     
     ~Object();
     
-  public:
     Object(vec3<float> position, vec3<float> rotation, vec3<float> scale, Triangle *triangles, int num_triangles, BvhNode *bvh);
   };
 
