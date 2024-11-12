@@ -602,9 +602,9 @@ void bvh::tests::rt_classroom() {
   const int WIDTH = 80;
   const int HEIGHT = 60;
   const float FOV = 60.0f;
-  const bvh::vec3<float> CAMERA_POS(0, 0, 3);
+  const bvh::vec3<float> CAMERA_POS(2.2f, 1.6f, 3.5f);
   const bvh::vec3<float> CAMERA_UP(0, 1, 0);
-  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(0, 0, -1));
+  const bvh::vec3<float> CAMERA_DIR = bvh::vec3<float>::normalize(bvh::vec3<float>(-0.3f, -0.2f, -1));
   
   // Precompute the bvh of the scene
   std::cout << "Building BVH" << std::endl;
